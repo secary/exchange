@@ -13,13 +13,12 @@ echo "脚本开始执行: $(date)" >> /home/mt/root/exchange/cronjob.log
 # echo "当前环境变量: $(env)" >> /home/mt/root/exchange/cronjob.log
 echo "脚本执行结束: $(date)" >> /home/mt/root/exchange/cronjob.log
 
-# 切换到当前路径
-cd /home/mt/root/exchange
-
 # 上传数据到github
-git add data
+cd /home/mt/root/exchange/data
+git add ExchangeRates.csv
+echo "文件已暂存" >> /home/mt/root/exchange/cronjob.log
 commit_message="Auto-commit on $(date '+%Y-%m-%d %H:%M:%S')"
 git commit -m "$commit_message"
 git push origin main
 # 记录上传
-echo "文件已上传到 GitHub, 提交信息为: $commit_message"
+echo "文件已上传到 GitHub, 提交信息为: $commit_message" >> /home/mt/root/exchange/cronjob.log
