@@ -14,9 +14,20 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 import time
-
+from sqlalchemy import create_engine
+from sqlalchemy.exc import OperationalError
+import pymysql
 
 website = "https://www.boc.cn/sourcedb/whpj/"
+
+def engine():
+    sql = {
+        'user': 'root',
+        'password': '1519040104',
+        'host': '172.20.43.197',
+        'database': 'exchange'
+        }
+    return create_engine((f"mysql+pymysql://{sql['user']}:{sql['password']}@{sql['host']}/{sql['database']}"))
 
 def askurl(url):
     head = {
@@ -29,12 +40,10 @@ def askurl(url):
         html = response.read().decode('utf-8')
     except urllib.error.HTTPError as e:
         print(f"HTTP Error: {e.code} - {e.reason}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-    
+
     # Save the raw HTML to a file for debugging
-    with open('debug.html', 'w', encoding='utf-8') as file:
-        file.write(html)
+    # with open('/home/mt/root/exchange/debug.html', 'w', encoding='utf-8') as file:
+    #     file.write(html)
     
     return html
 
@@ -73,7 +82,7 @@ def store_data(datalist, csv_file="/home/mt/root/exchange/data/ExchangeRates.csv
                 "中行折算": [data[5]],
                 "Date": [data[6]],
                 "Time": [data[7]],
-                "locals": [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())]
+                "Locals": [time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())]
             }
             all_data.append(data_new)
 
@@ -91,22 +100,26 @@ def store_data(datalist, csv_file="/home/mt/root/exchange/data/ExchangeRates.csv
     else:
         df_updated = df_new
 
-
-    df_updated.to_csv(csv_file, index=False)
-    print(f"数据成功存储到 {csv_file}")
-
-
+    try:
+        df_updated.to_csv(csv_file, index=False)
+        print(f'数据成功存储到{csv_file}')
+        df_updated.to_sql('rates', con=engine(), if_exists='replace', index=False)
+        print(f'数据成功存储到exchange.rates')
+    except OperationalError as e:
+        print(f"数据库操作错误: {e.orig}.")
+        if "Can't connect to MySQL server" in str(e.orig):
+            print("请检查MySQL服务器是否在正确的地址运行")
 
 
 def main():
-    print("开始抓取汇率数据")
     try:
         currencies = ["澳大利亚元", "日元"]  # 可变的货币列表
+        print(f'开始抓取人民币兑换{"、".join(currencies)}汇率数据')
         rates_data = getexchange_rate(website, currencies)
         store_data(rates_data)
+        print('汇率数据抓取完成')
     except Exception as e:
         print('出现错误： ', e)
-    print("汇率数据抓取完成")
     
 if __name__ == '__main__':
     main()

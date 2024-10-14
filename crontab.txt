@@ -1,0 +1,3 @@
+
+*/10 * * * * /usr/bin/zsh /home/mt/root/exchange/run_amatsukaze.sh
+
