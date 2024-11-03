@@ -15,6 +15,7 @@ echo "脚本执行结束: $(date)" >> /home/mt/root/exchange/cronjob.log
 
 # 上传数据到github
 cd /home/mt/root/exchange/data
+git checkout main
 git add ExchangeRates.csv
 echo "文件已暂存" >> /home/mt/root/exchange/cronjob.log
 commit_message="Auto-commit on $(date '+%Y-%m-%d %H:%M:%S')"
