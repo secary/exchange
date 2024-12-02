@@ -1,7 +1,8 @@
 import subprocess
 import smtplib
 from email.mime.text import MIMEText
-
+from email.mime.multipart import MIMEMultipart
+import logging
 
 def send_notification(title, message):
     """
@@ -23,21 +24,31 @@ def send_notification(title, message):
         print(f"BurntToast 通知发送失败: {e}")
 
 
+logging.basicConfig(filename="log/error.log", level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
 
-
-def send_email(subject, body, sender, password, receiver, smtp_server, smtp_port=465):
-    """
-    发送邮件提醒
-    """
+def send_email(subject, body, sender, password, receiver, smtp_server, smtp_port=587):
     try:
-        msg = MIMEText(body, "plain", "utf-8")
-        msg["Subject"] = subject
+        # 创建邮件对象
+        msg = MIMEMultipart()
         msg["From"] = sender
         msg["To"] = receiver
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
 
-        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
-            server.login(sender, password)
-            server.sendmail(sender, receiver, msg.as_string())
+        # 连接 SMTP 服务器并发送邮件
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.ehlo("example.com")  # 第一次发送 EHLO
+            server.starttls()  # 启用 TLS
+            server.login(sender, password)  # 登录 SMTP 服务器
+            server.sendmail(sender, receiver, msg.as_string())  # 发送邮件
+
         print("邮件发送成功！")
+    except smtplib.SMTPAuthenticationError as auth_error:
+        logging.error(f"SMTP 认证失败: {auth_error}")
+        print("SMTP 认证失败，请检查用户名或密码是否正确。")
+    except smtplib.SMTPConnectError as conn_error:
+        logging.error(f"SMTP 连接失败: {conn_error}")
+        print("SMTP 连接失败，请检查网络连接或服务器地址。")
     except Exception as e:
-        print(f"发送邮件失败: {e}")
+        logging.error(f"邮件发送失败: {e}")
+        print(f"邮件发送失败: {e}")

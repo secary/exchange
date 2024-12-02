@@ -4,29 +4,33 @@ import time
 from sqlalchemy.exc import OperationalError
 from config import get_engine, CSV_FILE
 
-def store_data(datalist):
+def store_data(data_dict):
     all_data = []
-    for data in datalist:
-        if isinstance(data, list):
-            data_new = {
-                "Currency": [data[0]],
-                "现汇买入": [data[1]],
-                "现钞买入": [data[2]],
-                "现汇卖出": [data[3]],
-                "现钞卖出": [data[4]],
-                "中行折算": [data[5]],
-                "Date": [data[6]],
-                "Time": [data[7]],
-                "Locals": [time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())]
-            }
-            all_data.append(data_new)
+    
+    # 将字典格式转换为适合 DataFrame 的行数据
+    for currency, data in data_dict.items():
+        row = {
+            "Currency": currency,
+            "现汇买入": data.get("现汇买入价"),
+            "现钞买入": data.get("现钞买入价"),
+            "现汇卖出": data.get("现汇卖出价"),
+            "现钞卖出": data.get("现钞卖出价"),
+            "中行折算": data.get("中行折算价"),
+            "Date": data.get("日期"),
+            "Time": time.strftime("%H:%M:%S", time.localtime()),
+            "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        }
+        all_data.append(row)
 
+    # 如果没有数据，直接返回
     if not all_data:
         print("未抓取到任何数据，无法存储。")
         return
 
-    df_new = pd.concat([pd.DataFrame(d) for d in all_data], ignore_index=True)
+    # 将数据转换为 Pandas DataFrame
+    df_new = pd.DataFrame(all_data)
 
+    # 如果 CSV 文件存在，读取现有数据并合并
     if os.path.exists(CSV_FILE):
         df_existing = pd.read_csv(CSV_FILE)
         df_updated = pd.concat([df_existing, df_new], ignore_index=True)
@@ -34,8 +38,11 @@ def store_data(datalist):
         df_updated = df_new
 
     try:
+        # 将数据保存到 CSV 文件
         df_updated.to_csv(CSV_FILE, index=False)
         print(f'数据成功存储到 {CSV_FILE}')
+
+        # 将数据保存到数据库
         df_updated.to_sql('rates', con=get_engine(), if_exists='replace', index=False)
         print('数据成功存储到 exchange.rates 数据库表')
     except OperationalError as e:

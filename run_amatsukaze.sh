@@ -4,7 +4,7 @@
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/mt/.local/bin:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
 
 # 定义日志文件和分割线
-LOG_FILE="/home/mt/root/exchange/amatsu.log"
+LOG_FILE="/home/mt/root/exchange/log/amatsu.log"
 SEPARATOR1="----------------------------------------"
 SEPARATOR2="========================================"
 
