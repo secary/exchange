@@ -1,6 +1,6 @@
-from fetcher import get_exchange_rate
-from storage import store_data
-from notifier import send_notification, send_email
+from amatsukaze.fetcher import get_exchange_rate
+from amatsukaze.storage import store_data
+from amatsukaze.notifier import send_notification, send_email
 from config import WEBSITE,CURRENCIES, CURRENCY_THRESHOLDS, EMAIL_CONFIG
 import pandas as pd
 
