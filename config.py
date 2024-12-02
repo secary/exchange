@@ -38,24 +38,3 @@ EMAIL_CONFIG = {
     'smtp_server': os.getenv('SMTP_SERVER'),
     'smtp_port': int(os.getenv('SMTP_PORT'))
 }
-
-
-
-# 读取环境变量
-db_user = os.getenv('DB_USER')
-db_password = os.getenv('DB_PASSWORD')
-db_host = os.getenv('DB_HOST')
-db_name = os.getenv('DB_NAME')
-
-email_sender = os.getenv('EMAIL_SENDER')
-email_password = os.getenv('EMAIL_PASSWORD')
-email_receiver = os.getenv('EMAIL_RECEIVER')
-smtp_server = os.getenv('SMTP_SERVER')
-smtp_port = os.getenv('SMTP_PORT')
-
-# 打印环境变量值
-print("Database Config:")
-print(f"User: {db_user}, Password: {db_password}, Host: {db_host}, Name: {db_name}")
-
-print("\nEmail Config:")
-print(f"Sender: {email_sender}, Password: {email_password}, Receivers: {email_receiver}, SMTP Server: {smtp_server}, Port: {smtp_port}")
