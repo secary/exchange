@@ -21,8 +21,8 @@ def send_alert(currency, current_rate, threshold, df):
     # 邮件接收者
     if currency == "日元":
         receivers = EMAIL_CONFIG['receiver']
-    elif currency == "澳大利亚元":
-        receivers = [EMAIL_CONFIG['receiver'][0]]
+    # elif currency == "澳大利亚元":
+    #     receivers = [EMAIL_CONFIG['receiver'][0]]
     else:
         receivers = []
 
@@ -56,7 +56,7 @@ def main():
         for currency, data in rates_data.items():
             if currency in CURRENCY_THRESHOLDS:
                 threshold = CURRENCY_THRESHOLDS[currency]
-                current_rate = float(data['现汇买入价'])
+                current_rate = float(data['现汇卖出价'])
 
                 # 如果低于阈值，发送提醒
                 if current_rate < threshold:
