@@ -1,25 +1,23 @@
 #!/bin/zsh
 
-# 设置 PATH，包括常用可执行文件的目录
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/mt/.local/bin"
+# 设置 PATH
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/mt/.local/bin:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
 
-# 记录当前日期时间到日志
-echo "脚本开始执行: $(date)" >> /home/mt/root/exchange/cronjob.log
+# 定义日志文件和分割线
+LOG_FILE="/home/mt/root/exchange/amatsu.log"
+SEPARATOR1="----------------------------------------"
+SEPARATOR2="========================================"
 
-# 执行你的 Python 脚本，并将输出记录到日志文件
-/usr/bin/python3 /home/mt/root/exchange/Amatsukaze.py >> /home/mt/root/exchange/cronjob.log 2>&1
+# 添加分割线和执行时间
+echo "$SEPARATOR2" >> "$LOG_FILE"
+echo "脚本开始执行: $(date)" >> "$LOG_FILE"
 
-# 记录脚本结束时间到日志
-# echo "当前环境变量: $(env)" >> /home/mt/root/exchange/cronjob.log
-echo "脚本执行结束: $(date)" >> /home/mt/root/exchange/cronjob.log
+# 添加分割线并记录 Python 脚本执行
+echo "$SEPARATOR1" >> "$LOG_FILE"
+# echo "执行 Python 脚本: $(date)" >> "$LOG_FILE"
+/usr/bin/python3 /home/mt/root/exchange/Amatsukaze.py >> "$LOG_FILE" 2>&1
 
-# 上传数据到github
-# cd /home/mt/root/exchange/data
-# git checkout main
-# git add ExchangeRates.csv
-# echo "文件已暂存" >> /home/mt/root/exchange/cronjob.log
-# commit_message="Auto-commit on $(date '+%Y-%m-%d %H:%M:%S')"
-# git commit -m "$commit_message"
-# git push origin main
-# # 记录上传
-# echo "文件已上传到 GitHub, 提交信息为: $commit_message" >> /home/mt/root/exchange/cronjob.log
+# 添加分割线并记录结束时间
+echo "$SEPARATOR1" >> "$LOG_FILE"
+echo "脚本执行结束: $(date)" >> "$LOG_FILE"
+echo "$SEPARATOR2" >> "$LOG_FILE"
