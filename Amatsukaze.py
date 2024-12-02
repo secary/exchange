@@ -8,38 +8,36 @@ def send_alert(currency, current_rate, threshold, df):
     """
     发送通知和邮件提醒的通用函数
     """
+    # 通知内容
     note = f"{currency}现汇买入价: {current_rate}, 低于 {threshold}"
     send_notification(title="汇率提醒", message=note)
-    
-    # 如果是需要详细数据的货币（如日元），发送邮件
+
+    # 邮件正文
+    message = (
+        f"当前{currency}汇率低于{threshold}\n\n"
+        f"以下是详细数据：\n{df[[currency]].to_string()}"
+    )
+
+    # 邮件接收者
     if currency == "日元":
-        message = (
-            f"当前{currency}汇率低于{threshold}\n\n"
-            f"以下是详细数据：\n{df[[currency]].to_string()}"
-        )
+        receivers = EMAIL_CONFIG['receiver']
+    elif currency == "澳大利亚元":
+        receivers = [EMAIL_CONFIG['receiver'][0]]
+    else:
+        receivers = []
+
+    # 发送邮件（仅当有接收者时）
+    if receivers:
         send_email(
             subject="汇率提醒",
             body=message,
             sender=EMAIL_CONFIG['sender'],
             password=EMAIL_CONFIG['password'],
-            receivers=EMAIL_CONFIG['receiver'],  # 修改为 receivers
+            receivers=receivers,
             smtp_server=EMAIL_CONFIG['smtp_server'],
             smtp_port=EMAIL_CONFIG['smtp_port']
         )
-    if currency == "澳大利亚元":
-        message = (
-            f"当前{currency}汇率低于{threshold}\n\n"
-            f"以下是详细数据：\n{df[[currency]].to_string()}"
-        )
-        send_email(
-            subject="汇率提醒",
-            body=message,
-            sender=EMAIL_CONFIG['sender'],
-            password=EMAIL_CONFIG['password'],
-            receivers=[EMAIL_CONFIG['receiver'][0]],  # 修改为 receivers
-            smtp_server=EMAIL_CONFIG['smtp_server'],
-            smtp_port=EMAIL_CONFIG['smtp_port']
-        )
+
 
 
 def main():
