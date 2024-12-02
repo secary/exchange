@@ -1,8 +1,8 @@
 import subprocess
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import logging
 
 def send_notification(title, message):
     """
@@ -24,14 +24,24 @@ def send_notification(title, message):
         print(f"BurntToast 通知发送失败: {e}")
 
 
-logging.basicConfig(filename="log/error.log", level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(filename="/home/mt/root/exchange/log/mail.log", level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
 
-def send_email(subject, body, sender, password, receiver, smtp_server, smtp_port=587):
+def send_email(subject, body, sender, password, receivers, smtp_server, smtp_port=587):
+    """
+    群发邮件的函数
+    :param subject: 邮件主题
+    :param body: 邮件正文
+    :param sender: 发件人邮箱
+    :param password: 发件人邮箱密码
+    :param receivers: 收件人列表（支持多个收件人）
+    :param smtp_server: SMTP 服务器地址
+    :param smtp_port: SMTP 服务器端口（默认为 587）
+    """
     try:
         # 创建邮件对象
         msg = MIMEMultipart()
         msg["From"] = sender
-        msg["To"] = receiver
+        msg["To"] = ", ".join(receivers)  # 将收件人列表转换为逗号分隔的字符串
         msg["Subject"] = subject
         msg.attach(MIMEText(body, "plain"))
 
@@ -40,7 +50,7 @@ def send_email(subject, body, sender, password, receiver, smtp_server, smtp_port
             server.ehlo("example.com")  # 第一次发送 EHLO
             server.starttls()  # 启用 TLS
             server.login(sender, password)  # 登录 SMTP 服务器
-            server.sendmail(sender, receiver, msg.as_string())  # 发送邮件
+            server.sendmail(sender, receivers, msg.as_string())  # 群发邮件
 
         print("邮件发送成功！")
     except smtplib.SMTPAuthenticationError as auth_error:
@@ -52,3 +62,4 @@ def send_email(subject, body, sender, password, receiver, smtp_server, smtp_port
     except Exception as e:
         logging.error(f"邮件发送失败: {e}")
         print(f"邮件发送失败: {e}")
+        
