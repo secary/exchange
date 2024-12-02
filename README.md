@@ -1,7 +1,7 @@
 # MT's Exchange Rate Web Crawler
 ## 概述
 * 中行外汇汇率数据爬取，数据源：[链接](https://www.boc.cn/sourcedb/whpj/)
-* 通过wsl的crontab设置自动化运行，运行周期为30分钟一次
+* 通过wsl的crontab设置自动化运行，运行周期为60分钟一次，范围0700-2300 ACDT
 * 数据保存至data文件夹及个人数据库
 ## 功能介绍
 * 通过shell脚本运行以便保存日志
