@@ -53,13 +53,13 @@ def main():
         print(df)
 
         # 遍历汇率数据并检查是否需要提醒
-        # for currency, data in rates_data.items():
-        #     if currency in CURRENCY_THRESHOLDS:
-        #         threshold = CURRENCY_THRESHOLDS[currency]
-        #         current_rate = float(data['现汇卖出价'])
+        for currency, data in rates_data.items():
+            if currency in CURRENCY_THRESHOLDS:
+                threshold = CURRENCY_THRESHOLDS[currency]
+                current_rate = float(data['现汇卖出价'])
 
-        #         if current_rate < threshold:
-        #             send_alert(currency, current_rate, threshold, df)
+                if current_rate <= threshold:
+                    send_alert(currency, current_rate, threshold, df)
 
     except Exception as e:
         print(f"出现错误：{e}")
