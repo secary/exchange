@@ -26,8 +26,7 @@ def get_engine():
 
 # 提醒阈值
 CURRENCY_THRESHOLDS = {
-    "澳大利亚元": 0,
-    "日元": 4.7 
+    "澳大利亚元": 450
 }
 
 # 邮件提醒配置
