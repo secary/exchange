@@ -1,12 +1,9 @@
 # MT's Exchange Rate Web Crawler
 ## 概述
 * 中行外汇汇率数据爬取，数据源：[链接](https://www.boc.cn/sourcedb/whpj/)
-* 通过wsl的crontab设置自动化运行，运行周期为60分钟一次，范围0700-2300 ACDT
-* 数据保存至data文件夹及个人数据库
-## 功能介绍
-* 通过shell脚本运行以便保存日志
-* 设置config.py以进行阈值警告，汇率低于阈值时可以自动通知
-* 通知通过调用powershell的BurnToast实现弹窗，以及python的smtplib群发邮件
-* 拆分主逻辑模块与其他功能模块
-## 卫星
-* 分析功能建设中
+## 功能
+* 可以通过配置crontab来进行自动化
+* 通过i.sh或o.sh来控制自动化任务开关
+* 当前为抓取澳元与日元汇率，主要执行脚本为Amatsukaze.py
+* 可以根据阈值需求设置弹窗提醒或邮箱提醒，需要自己配置环境变量
+* 执行记录会保存至log目录
