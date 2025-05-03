@@ -13,7 +13,7 @@ def store_data(data_dict):
             "Date": data.get("日期"),
             "Currency": currency,
             "现汇卖出": data.get("现汇卖出价"),
-            "Locals": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
         }
         all_data.append(row)
 
@@ -26,16 +26,16 @@ def store_data(data_dict):
     df_new["Date"] = pd.to_datetime(df_new["Date"], errors="coerce")
 
 
-    # 合并 CSV（历史数据管理）
-    if os.path.exists(CSV_FILE):
-        df_existing = pd.read_csv(CSV_FILE)
-        df_updated = pd.concat([df_existing, df_new], ignore_index=True)
-    else:
-        df_updated = df_new
+    # # 合并 CSV（历史数据管理）
+    # if os.path.exists(CSV_FILE):
+    #     df_existing = pd.read_csv(CSV_FILE)
+    #     df_updated = pd.concat([df_existing, df_new], ignore_index=True)
+    # else:
+    #     df_updated = df_new
 
-    # 保存合并后的 CSV
-    df_updated.to_csv(CSV_FILE, index=False)
-    print(f'数据成功存储到 {CSV_FILE}')
+    # # 保存合并后的 CSV
+    # df_updated.to_csv(CSV_FILE, index=False)
+    # print(f'数据成功存储到 {CSV_FILE}')
 
     # 插入到数据库并根据主键更新 Locals
     engine = get_engine()
@@ -54,7 +54,7 @@ def store_data(data_dict):
                     "Sell": row[2],
                     "Locals": row[3]
                 })
-        print("数据成功更新到 exchange.predictions 数据库表（主键重复时仅更新 Locals）")
+        print("数据成功更新到 exchange.predictions 数据库表")
 
     except OperationalError as e:
         print(f"数据库操作错误: {e.orig}.")
