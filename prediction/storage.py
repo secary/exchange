@@ -29,6 +29,7 @@ def store_data(data_dict):
 
     # 将数据转换为 Pandas DataFrame
     df_new = pd.DataFrame(all_data)
+    df_new.set_index("Date", inplace=True)
 
     # 如果 CSV 文件存在，读取现有数据并合并
     if os.path.exists(CSV_FILE):
@@ -43,8 +44,8 @@ def store_data(data_dict):
         print(f'数据成功存储到 {CSV_FILE}')
 
         # 将数据保存到数据库
-        df_updated.to_sql('rates', con=get_engine(), if_exists='replace', index=False)
-        print('数据成功存储到 exchange.rates 数据库表')
+        df_updated.to_sql('predictions', con=get_engine(), if_exists='replace', index=False)
+        print('数据成功存储到 exchange.predictions 数据库表')
     except OperationalError as e:
         print(f"数据库操作错误: {e.orig}.")
         if "Can't connect to MySQL server" in str(e.orig):
