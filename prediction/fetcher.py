@@ -37,11 +37,7 @@ def get_exchange_rate(url, currencies):
             row = target_td.find_parent('tr')
             row_data = [td.get_text(strip=True) for td in row.find_all('td')]
             result[row_data[0]] = {
-                "现汇买入价": row_data[1],
-                "现钞买入价": row_data[2],
                 "现汇卖出价": row_data[3],
-                "现钞卖出价": row_data[4],
-                "中行折算价": row_data[5],
                 "日期": row_data[6]
             }
         else:
