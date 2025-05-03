@@ -16,3 +16,5 @@ echo "$SEPARATOR1" >> "$LOG_FILE"
 
 # 确保脚本退出
 exit 0
+
+# 0 * * * * /bin/bash /home/mt/root/exchange/prediction/run.sh >> /home/mt/root/exchange/prediction/crontab.log 2>&1
