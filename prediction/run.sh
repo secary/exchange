@@ -23,4 +23,4 @@ echo "$SEPARATOR1" >> "$LOG_FILE"
 exit 0
 
 
-# 0 * * * * /bin/bash /home/mt/root/exchange/prediction/run.sh >> /home/mt/root/exchange/prediction/crontab.log 2>&1
+# 0 * * * * /usr/bin/zsh /home/mt/root/exchange/prediction/run.sh >> /home/mt/root/exchange/prediction/logs/crontab.log 2>&1
