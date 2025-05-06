@@ -12,11 +12,12 @@ DB_CONFIG = {
     'database': os.getenv('DB_NAME')
 }
 
-CSV_FILE = "/home/mt/root/exchange/prediction/data/ExchangeRates.csv"
+BASE_DIR = os.getcwd()
+CSV_FILE = os.path.join(BASE_DIR, "data", "ExchangeRates.csv")
 WEBSITE = "https://www.boc.cn/sourcedb/whpj/"
 
 # 货币列表
-CURRENCIES = ["澳大利亚元"]
+CURRENCIES = ["澳大利亚元", "日元"]
 
 # 数据库连接
 def get_engine():

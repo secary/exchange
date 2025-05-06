@@ -1,24 +1,26 @@
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/mt/.local/bin:/mnt/c/Windows/System32/WindowsPowerShell/v1.0"
+#!/bin/zsh
 
-# 定义日志文件和分割线
-LOG_FILE="/home/mt/root/exchange/log/amatsu.log"
+# 获取当前脚本所在目录
+BASE_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# 定义日志文件路径
+LOG_FILE="$BASE_DIR/logs/auto.log"
 SEPARATOR1="--------------------------------------------------------------------------------"
-SEPARATOR2="================================================================================"
 
-# 添加分割线并记录脚本执行时间
-echo "$SEPARATOR2" >> "$LOG_FILE"
-echo "开始抓取汇率: $(date)" >> "$LOG_FILE"
+# 自动创建 logs 目录（如果不存在）
+mkdir -p "$BASE_DIR/logs"
 
+# 添加日志分隔线和时间
 echo "$SEPARATOR1" >> "$LOG_FILE"
-echo "执行 Amatsukaze.py: $(date)" >> "$LOG_FILE"
-# 执行python脚本
-/usr/bin/python3 /home/mt/root/exchange/Amatsukaze.py >> "$LOG_FILE" 2>&1
+echo "执行 main.py $(date)" >> "$LOG_FILE"
 
-# 添加分割线并记录结束时间
-echo "$SEPARATOR1" >> "$LOG_FILE"
+# 执行 main.py（使用脚本自身路径）
+/usr/bin/python3 "$BASE_DIR/app.py" >> "$LOG_FILE" 2>&1
+
 echo "脚本执行结束: $(date)" >> "$LOG_FILE"
-echo "$SEPARATOR2" >> "$LOG_FILE"
+echo "$SEPARATOR1" >> "$LOG_FILE"
 
-# 确保脚本退出
 exit 0
 
+
+# 0 * * * * /usr/bin/zsh /home/mt/root/exchange/run.sh >> /home/mt/root/exchange/log/crontab.log 2>&1

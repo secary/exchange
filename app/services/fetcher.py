@@ -21,11 +21,11 @@ def askurl(url):
 
 def get_exchange_rate(url, currencies):
     if not isinstance(currencies, list):
-        raise ValueError("currencies 参数必须是一个列表")
+        raise ValueError("❌ currencies 参数必须是一个列表")
     
     html = askurl(url)
     if not html:
-        print("未能获取 HTML 内容")
+        print("❌ 未能获取 HTML 内容")
         return {}
     
     soup = BeautifulSoup(html, "html.parser")
@@ -41,5 +41,5 @@ def get_exchange_rate(url, currencies):
                 "日期": row_data[6]
             }
         else:
-            print(f"未找到包含'{currency}'的<td>标签")
+            print(f"❌ 未找到包含'{currency}'的<td>标签")
     return result
