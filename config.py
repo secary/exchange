@@ -12,7 +12,7 @@ DB_CONFIG = {
     'database': os.getenv('DB_NAME')
 }
 
-BASE_DIR = os.getcwd()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_FILE = os.path.join(BASE_DIR, "data", "ExchangeRates.csv")
 WEBSITE = "https://www.boc.cn/sourcedb/whpj/"
 
