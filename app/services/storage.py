@@ -35,7 +35,7 @@ def store_data(data_dict):
 
     try:
         df_updated.to_csv(CSV_FILE, index=False)
-        logger.info(f"✅ 数据成功存储到 {CSV_FILE}")
+        logger.debug(f"✅ 数据成功存储到 {CSV_FILE}")
     except Exception as e:
         logger.error(f"❌ csv保存错误: {e}")
 
@@ -52,7 +52,7 @@ def store_data(data_dict):
                 new_entry = History(**row)
                 session.add(new_entry)
         session.commit()
-        logger.info("✅ 数据成功更新到 exchange.history 数据库表")
+        logger.debug("✅ 数据成功更新到 exchange.history 数据库表")
     except OperationalError as e:
         session.rollback()
         logger.error(f"❌ 数据库操作错误: {e.orig}")

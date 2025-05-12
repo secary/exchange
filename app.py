@@ -11,11 +11,11 @@ for handler in logging.root.handlers[:]:
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
-logger.info("日志配置初始化成功")
+logger.debug("日志配置初始化成功")
 
 def main():
     try:
-        logger.info(f"开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
+        logger.info(f"开始抓取人民币兑换 {', '.join(CURRENCIES)}汇率数据")
         logger.info(f"数据来源：{WEBSITE}")
         
         rates_data = get_exchange_rate(WEBSITE, CURRENCIES)
@@ -25,11 +25,11 @@ def main():
 
         # 转换为 Pandas DataFrame 并输出日志
         df = pd.DataFrame(rates_data)
-        logger.debug(f"抓取数据内容：\n{df}")
+        logger.info(f"抓取数据内容：\n{df}")
 
     except Exception as e:
         logger.exception(f"❌ 出现错误：{e}")  # 自动包含堆栈信息
 
 if __name__ == '__main__':
-    logger.info("程序启动")
+    logger.debug("程序启动")
     main()
