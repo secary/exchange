@@ -1,65 +1,65 @@
-import subprocess
-import smtplib
+import os
+import pandas as pd
+import time
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import sessionmaker
+from config.settings import get_engine, CSV_FILE
+from app.models import History, Base
 
-def send_notification(title, message):
-    """
-    使用 BurntToast 发送 Windows 通知，显式加载模块路径
-    """
-    powershell_path = r"/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-    burnttoast_path = r"C:\Users\secar\Documents\PowerShell\Modules\BurntToast"
+logger = logging.getLogger(__name__)
+
+def store_data(data_dict):
+    all_data = []
+
+    for currency, data in data_dict.items():
+        row = {
+            "Date": pd.to_datetime(data.get("日期"), errors="coerce"),
+            "Currency": currency,
+            "Rate": float(data.get("现汇卖出价")),
+            "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        }
+        all_data.append(row)
+
+    if not all_data:
+        logger.warning("未抓取到任何数据，无法存储。")
+        return
+
+    df_new = pd.DataFrame(all_data)
+
+    if os.path.exists(CSV_FILE):
+        df_existing = pd.read_csv(CSV_FILE)
+        df_updated = pd.concat([df_existing, df_new], ignore_index=True)
+    else:
+        df_updated = df_new
 
     try:
-        command = f'Import-Module "{burnttoast_path}"; New-BurntToastNotification -Text "{title}", "{message}"'
-        subprocess.run([
-            powershell_path,
-            "-NoProfile",  # 跳过加载配置文件
-            "-Command",
-            command
-        ], check=True)
-        print("BurntToast 通知发送成功")
+        df_updated.to_csv(CSV_FILE, index=False)
+        logger.info(f"✅ 数据成功存储到 {CSV_FILE}")
     except Exception as e:
-        print(f"BurntToast 通知发送失败: {e}")
+        logger.error(f"❌ csv保存错误: {e}")
 
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-logging.basicConfig(filename="/home/mt/root/exchange/log/mail.log", level=logging.ERROR, format="%(asctime)s - %(levelname)s - %(message)s")
-
-def send_email(subject, body, sender, password, receivers, smtp_server, smtp_port=587):
-    """
-    群发邮件的函数
-    :param subject: 邮件主题
-    :param body: 邮件正文
-    :param sender: 发件人邮箱
-    :param password: 发件人邮箱密码
-    :param receivers: 收件人列表（支持多个收件人）
-    :param smtp_server: SMTP 服务器地址
-    :param smtp_port: SMTP 服务器端口（默认为 587）
-    """
     try:
-        # 创建邮件对象
-        msg = MIMEMultipart()
-        msg["From"] = sender
-        msg["To"] = ", ".join(receivers)  # 将收件人列表转换为逗号分隔的字符串
-        msg["Subject"] = subject
-        msg.attach(MIMEText(body, "plain"))
-
-        # 连接 SMTP 服务器并发送邮件
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.ehlo("example.com")  # 第一次发送 EHLO
-            server.starttls()  # 启用 TLS
-            server.login(sender, password)  # 登录 SMTP 服务器
-            server.sendmail(sender, receivers, msg.as_string())  # 群发邮件
-
-        print("邮件发送成功！")
-    except smtplib.SMTPAuthenticationError as auth_error:
-        logging.error(f"SMTP 认证失败: {auth_error}")
-        print("SMTP 认证失败，请检查用户名或密码是否正确。")
-    except smtplib.SMTPConnectError as conn_error:
-        logging.error(f"SMTP 连接失败: {conn_error}")
-        print("SMTP 连接失败，请检查网络连接或服务器地址。")
+        for row in all_data:
+            existing = session.query(History).filter_by(Date=row["Date"], Currency=row["Currency"]).first()
+            if existing:
+                existing.Locals = row["Locals"]
+            else:
+                new_entry = History(**row)
+                session.add(new_entry)
+        session.commit()
+        logger.info("✅ 数据成功更新到 exchange.history 数据库表")
+    except OperationalError as e:
+        session.rollback()
+        logger.error(f"❌ 数据库操作错误: {e.orig}")
+        if "Can't connect to MySQL server" in str(e.orig):
+            logger.warning("请检查 MySQL 服务器是否在正确的地址运行")
     except Exception as e:
-        logging.error(f"邮件发送失败: {e}")
-        print(f"邮件发送失败: {e}")
-        
+        session.rollback()
+        logger.exception(f"❌ 其他错误: {e}")
+    finally:
+        session.close()

@@ -1,10 +1,13 @@
 import os
 import pandas as pd
 import time
+import logging
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
-from config import get_engine, CSV_FILE
+from config.settings import get_engine, CSV_FILE
 from app.models import History, Base
+
+logger = logging.getLogger(__name__)
 
 def store_data(data_dict):
     all_data = []
@@ -19,13 +22,11 @@ def store_data(data_dict):
         all_data.append(row)
 
     if not all_data:
-        print("未抓取到任何数据，无法存储。")
+        logger.warning("未抓取到任何数据，无法存储。")
         return
-    
-    # 将数据转换为 Pandas DataFrame
+
     df_new = pd.DataFrame(all_data)
 
-    # 如果 CSV 文件存在，读取现有数据并合并
     if os.path.exists(CSV_FILE):
         df_existing = pd.read_csv(CSV_FILE)
         df_updated = pd.concat([df_existing, df_new], ignore_index=True)
@@ -33,20 +34,16 @@ def store_data(data_dict):
         df_updated = df_new
 
     try:
-        # 将数据保存到 CSV 文件
         df_updated.to_csv(CSV_FILE, index=False)
-        print(f'✅ 数据成功存储到 {CSV_FILE}')
-    
+        logger.info(f"✅ 数据成功存储到 {CSV_FILE}")
     except Exception as e:
-        print(f'❌ csv保存错误: {e}')
-
+        logger.error(f"❌ csv保存错误: {e}")
 
     engine = get_engine()
     Session = sessionmaker(bind=engine)
     session = Session()
-    
-    try:
 
+    try:
         for row in all_data:
             existing = session.query(History).filter_by(Date=row["Date"], Currency=row["Currency"]).first()
             if existing:
@@ -55,15 +52,14 @@ def store_data(data_dict):
                 new_entry = History(**row)
                 session.add(new_entry)
         session.commit()
-        print("✅ 数据成功更新到 exchange.history 数据库表")
-
+        logger.info("✅ 数据成功更新到 exchange.history 数据库表")
     except OperationalError as e:
         session.rollback()
-        print(f"❌ 数据库操作错误: {e.orig}.")
+        logger.error(f"❌ 数据库操作错误: {e.orig}")
         if "Can't connect to MySQL server" in str(e.orig):
-            print("请检查 MySQL 服务器是否在正确的地址运行")
+            logger.warning("请检查 MySQL 服务器是否在正确的地址运行")
     except Exception as e:
         session.rollback()
-        print(f"❌ 其他错误: {e}")
+        logger.exception(f"❌ 其他错误: {e}")
     finally:
         session.close()

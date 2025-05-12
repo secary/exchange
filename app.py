@@ -1,23 +1,35 @@
 from app.services.fetcher import get_exchange_rate
 from app.services.storage import store_data
-from config import WEBSITE,CURRENCIES
+from config.settings import WEBSITE, CURRENCIES
 import pandas as pd
+import logging.config
+from config.logger_config import LOGGING_CONFIG
 
+# ✅ 清除之前的 handler，防止重复日志
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
+logger.info("日志配置初始化成功")
 
 def main():
     try:
-        print(f"开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
-        print(f"数据来源：{WEBSITE}")
+        logger.info(f"开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
+        logger.info(f"数据来源：{WEBSITE}")
+        
         rates_data = get_exchange_rate(WEBSITE, CURRENCIES)
         store_data(rates_data)
-        print("汇率数据抓取完成")
 
-        # 转换为 Pandas DataFrame
+        logger.info("汇率数据抓取完成")
+
+        # 转换为 Pandas DataFrame 并输出日志
         df = pd.DataFrame(rates_data)
-        print(df)
+        logger.debug(f"抓取数据内容：\n{df}")
 
     except Exception as e:
-        print(f"❌ 出现错误：{e}")
+        logger.exception(f"❌ 出现错误：{e}")  # 自动包含堆栈信息
 
 if __name__ == '__main__':
+    logger.info("程序启动")
     main()
