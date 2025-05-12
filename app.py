@@ -15,7 +15,7 @@ logger.debug("日志配置初始化成功")
 
 def main():
     try:
-        logger.info(f"开始抓取人民币兑换 {', '.join(CURRENCIES)}汇率数据")
+        logger.info(f"开始抓取人民币兑换{', '.join(CURRENCIES)}汇率数据")
         logger.info(f"数据来源：{WEBSITE}")
         
         rates_data = get_exchange_rate(WEBSITE, CURRENCIES)
@@ -31,5 +31,5 @@ def main():
         logger.exception(f"❌ 出现错误：{e}")  # 自动包含堆栈信息
 
 if __name__ == '__main__':
-    logger.debug("程序启动")
+    logger.info("程序启动")
     main()
