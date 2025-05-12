@@ -24,7 +24,7 @@ LOGGING_CONFIG = {
             "class": "logging.FileHandler",
             "level": "DEBUG",
             "formatter": "standard",
-            "filename": os.path.join(LOG_DIR, "app.log"),
+            "filename": os.path.join(LOG_DIR, "Janus.log"),
             "encoding": "utf-8"
         }
     },

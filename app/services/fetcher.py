@@ -61,5 +61,5 @@ def get_exchange_rate(url, currencies, timeout=10, retries=3):
             f.write(html)
         logger.warning(f"⚠️ 抓取失败，原始 HTML 已保存到 {failed_path}")
 
-    logger.debug(f"汇率抓取结果: \n{result}")
+    logger.debug(f"汇率抓取结果: {result}")
     return result

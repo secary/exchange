@@ -10,3 +10,10 @@ class History(Base):
     Currency = Column(String(20), primary_key=True)
     Rate = Column(Float)
     Locals = Column(DateTime)
+
+class Threshold(Base):
+    __tablename__ = 'thresholds'
+
+    Currency = Column(String(20), primary_key=True)
+    Upper = Column(Float)
+    Lower = Column(Float)
