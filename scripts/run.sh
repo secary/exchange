@@ -27,7 +27,7 @@ log_info "启动自动化任务"
 log_info "执行 Janus.py"
 
 # 执行主程序
-PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/Janus.py" >/dev/null 2>&1
+PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/Janus.py" >> "$LOG_FILE" 2>&1
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
