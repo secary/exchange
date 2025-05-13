@@ -1,11 +1,17 @@
 import urllib.request
 import urllib.error
 from bs4 import BeautifulSoup
-import logging
 import time
 import os
+import logging.config
+from config.logger_config import LOGGING_CONFIG
 
-logger = logging.getLogger(__name__)
+# ✅ 清除之前的 handler，防止重复日志
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("service")
 
 def askurl(url, timeout=10, retries=3, delay=2):
     head = {
@@ -62,4 +68,5 @@ def get_exchange_rate(url, currencies, timeout=10, retries=3):
         logger.warning(f"⚠️ 抓取失败，原始 HTML 已保存到 {failed_path}")
 
     logger.debug(f"汇率抓取结果: {result}")
+    
     return result

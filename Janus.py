@@ -2,6 +2,7 @@ from app.services.fetcher import get_exchange_rate
 from app.services.storage import store_data
 from config.settings import WEBSITE, CURRENCIES
 import pandas as pd
+
 import logging.config
 from config.logger_config import LOGGING_CONFIG
 
@@ -31,5 +32,5 @@ def main():
         logger.exception(f"❌ 出现错误：{e}")  # 自动包含堆栈信息
 
 if __name__ == '__main__':
-    logger.info("程序启动")
+    logger.info("Janus、了解！任せなさい！")
     main()

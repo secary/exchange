@@ -5,7 +5,7 @@ from config.logger_config import LOGGING_CONFIG
 
 # 初始化日志
 logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 logger.info("✅ 正在初始化 Flask 应用...")
 

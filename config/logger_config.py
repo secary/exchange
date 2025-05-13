@@ -26,11 +26,67 @@ LOGGING_CONFIG = {
             "formatter": "standard",
             "filename": os.path.join(LOG_DIR, "Janus.log"),
             "encoding": "utf-8"
+        },
+        "auto_file": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "filename": os.path.join(LOG_DIR, "auto.log"),
+            "encoding": "utf-8"
+        },
+        "api_file": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "filename": os.path.join(LOG_DIR, "api.log"),
+            "encoding": "utf-8"
+        },
+        "service_file": {
+            "class": "logging.FileHandler",
+            "level": "DEBUG",
+            "formatter": "standard",
+            "filename": os.path.join(LOG_DIR, "service.log"),
+            "encoding": "utf-8"
+        },
+        "error_file": {
+            "class": "logging.FileHandler",
+            "level": "ERROR",
+            "formatter": "standard",
+            "filename": os.path.join(LOG_DIR, "error.log"),
+            "encoding": "utf-8"
+        }
+    },
+    
+    "loggers": {
+        "app": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": False
+        },
+        "auto": {
+            "handlers": ["console", "auto_file"],
+            "level": "INFO",
+            "propagate": False
+        },
+        "api": {
+            "handlers": ["api_file", "error_file"],
+            "level": "INFO",
+            "propagate": False
+        },
+        "service": {
+            "handlers": ["service_file", "error_file"],
+            "level": "DEBUG",
+            "propagate": False
+        },
+        "error": {
+            "handlers": ["error_file"],
+            "level": "ERROR",
+            "propagate": False
         }
     },
 
     "root": {
-        "handlers": ["console", "file"],
+        "handlers": ["console", "file", "error_file"],
         "level": "DEBUG"
     }
 }

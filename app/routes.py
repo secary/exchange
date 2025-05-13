@@ -7,7 +7,8 @@ from sqlalchemy.orm import sessionmaker
 import os
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
+logger.info("✅ 初始化 API 路由")
 main = Blueprint("main", __name__)
 Session = sessionmaker(bind=get_engine())
 
@@ -55,7 +56,7 @@ def api_history():
 @main.route("/api/logs/latest", methods=["GET"])
 def api_logs_latest():
     logger.info("访问了 /api/logs/latest 查看最新日志")
-    log_path = os.path.join(os.path.dirname(__file__), "..", "logs", "app.log")
+    log_path = os.path.join(os.path.dirname(__file__), "..", "logs", "Janus.log")
     try:
         with open(log_path, "r", encoding="utf-8") as f:
             lines = f.readlines()[-50:]

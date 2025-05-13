@@ -2,7 +2,7 @@ from flask import Flask, request
 from app.routes import main
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 def create_app():
     app = Flask(__name__)

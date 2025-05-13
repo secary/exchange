@@ -7,7 +7,15 @@ from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
 from app.models import History, Base
 
-logger = logging.getLogger(__name__)
+import logging.config
+from config.logger_config import LOGGING_CONFIG
+
+# ✅ 清除之前的 handler，防止重复日志
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("service")
 
 def store_data(data_dict):
     all_data = []
