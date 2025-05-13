@@ -1,18 +1,16 @@
+import logging.config
+from config.logger_config import LOGGING_CONFIG
+
+logging.getLogger("service").handlers.clear()
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger(__name__)
+logger.debug("日志配置初始化成功")
+
 from app.services.fetcher import get_exchange_rate
 from app.services.storage import store_data
 from config.settings import WEBSITE, CURRENCIES
 import pandas as pd
 
-import logging.config
-from config.logger_config import LOGGING_CONFIG
-
-# ✅ 清除之前的 handler，防止重复日志
-for handler in logging.root.handlers[:]:
-    logging.root.removeHandler(handler)
-
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger(__name__)
-logger.debug("日志配置初始化成功")
 
 def main():
     try:

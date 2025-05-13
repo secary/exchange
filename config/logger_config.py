@@ -41,11 +41,11 @@ LOGGING_CONFIG = {
             "filename": os.path.join(LOG_DIR, "api.log"),
             "encoding": "utf-8"
         },
-        "service_file": {
+        "services_file": {
             "class": "logging.FileHandler",
             "level": "DEBUG",
             "formatter": "standard",
-            "filename": os.path.join(LOG_DIR, "service.log"),
+            "filename": os.path.join(LOG_DIR, "services.log"),
             "encoding": "utf-8"
         },
         "error_file": {
@@ -73,13 +73,18 @@ LOGGING_CONFIG = {
             "level": "INFO",
             "propagate": False
         },
-        "service": {
-            "handlers": ["service_file", "error_file"],
-            "level": "DEBUG",
-            "propagate": False
-        },
         "error": {
             "handlers": ["error_file"],
+            "level": "ERROR",
+            "propagate": False
+        },
+        "app.services": {
+            "handlers": ["services_file", "error_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "matplotlib.font_manager": {
+            "handlers": [],
             "level": "ERROR",
             "propagate": False
         }
