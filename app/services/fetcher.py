@@ -35,7 +35,7 @@ def askurl(url, timeout=10, retries=3, delay=2):
     logger.error(f"❌ 所有 {retries} 次尝试均失败，放弃请求。")
     return None
 
-def get_exchange_rate(url, currencies, timeout=10, retries=3):
+def get_exchange_rate(url, currencies, timeout=20, retries=3):
     if not isinstance(currencies, list):
         raise ValueError("❌ currencies 参数必须是一个列表")
     
