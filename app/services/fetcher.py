@@ -37,7 +37,7 @@ def askurl(url, timeout=10, retries=3, delay=2):
 
 def get_exchange_rate(url, currencies, timeout=20, retries=3):
     if not isinstance(currencies, list):
-        raise ValueError("❌ currencies 参数必须是一个列表")
+       logger.error("❌ currencies 参数必须是一个列表")
     
     html = askurl(url, timeout=timeout, retries=retries)
     if not html:
