@@ -1,29 +1,29 @@
-from flask import Blueprint, jsonify, request
-from app.services.fetcher import get_exchange_rate
-from app.services.storage import store_data
-from config.settings import WEBSITE, CURRENCIES, get_engine
-from app.models import History, Threshold
-from sqlalchemy.orm import sessionmaker
 import os
 import logging
 
 logger = logging.getLogger("api")
 logger.info("✅ 初始化 API 路由")
+logger_auto = logging.getLogger("auto")
+
+from flask import Blueprint, jsonify, request, render_template
+from app.services.fetcher import get_exchange_rate
+from app.services.storage import store_data
+from config.settings import WEBSITE, CURRENCIES, get_engine
+from app.models import History, Threshold
+from sqlalchemy.orm import sessionmaker
+from app.models import AutomationSwitch
+from sqlalchemy import func
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql import over
+from sqlalchemy import Integer
+from datetime import datetime, timedelta
+
 main = Blueprint("main", __name__)
 Session = sessionmaker(bind=get_engine())
 
 @main.route("/", methods=["GET"])
 def index():
-    logger.info("访问了 / 根路径")
-    return jsonify({
-        "message": "🌐 欢迎使用Janus API 服务",
-        "endpoints": {
-            "/api/fetch": "POST - 手动抓取汇率数据",
-            "/api/history": "GET - 查看历史记录",
-            "/api/logs/latest": "GET - 查看最新日志",
-            "/api/config": "GET/POST - 查看或更新监控配置"
-        }
-    })
+    return render_template("index.html")
 
 @main.route("/api/fetch", methods=["POST"])
 def api_fetch():
@@ -34,13 +34,17 @@ def api_fetch():
         return jsonify({"message": "抓取并存储成功", "data": data})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
+    
 @main.route("/api/history", methods=["GET"])
 def api_history():
     logger.info("访问了 /api/history 查看历史记录")
     session = Session()
     try:
-        results = session.query(History).order_by(History.Date.desc()).limit(50).all()
+        currency = request.args.get("currency")
+        query = session.query(History)
+        if currency:
+            query = query.filter(History.Currency == currency)
+        results = query.order_by(History.Date.desc()).limit(100).all()
         data = [
             {
                 "Date": row.Date.strftime("%Y-%m-%d %H:%M:%S"),
@@ -109,3 +113,97 @@ def api_config_post():
         return jsonify({"error": str(e)}), 500
     finally:
         session.close()
+
+@main.route("/api/switch/status", methods=["GET"])
+def get_switch_status():
+    logger.info("访问了 /api/switch/status 获取当前自动化状态")
+    session = Session()
+    try:
+        switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
+        status_str = "开启" if (switch and switch.value) else "关闭"
+        return jsonify({"status": status_str})
+    finally:
+        session.close()
+
+
+@main.route("/api/switch/toggle", methods=["POST"])
+def toggle_switch():
+    logger.info("访问了 /api/switch/toggle 切换自动化状态")
+    session = Session()
+    try:
+        switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
+        if switch:
+            switch.value = not switch.value
+        else:
+            switch = AutomationSwitch(key="auto_enabled", value=True)
+            session.add(switch)
+        session.commit()
+        status_str = "开启" if switch.value else "关闭"
+        logger.info(f"✅ 自动化开关已设置为：{status_str}")
+        logger_auto.info(f"✅ 自动化开关已设置为：{status_str}")
+        return jsonify({"status": status_str})
+    except Exception as e:
+        session.rollback()
+        logger.error(f"切换自动化开关失败: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        session.close()
+
+@main.route("/api/latest", methods=["GET"])
+def get_latest_rates():
+    logger.info("访问了 /api/latest 获取最新汇率")
+    session = Session()
+    try:
+        # 定义 row_number 窗口函数分组排名
+        row_number = func.row_number().over(
+            partition_by=History.Currency,
+            order_by=History.Date.desc()
+        ).label("rnk")
+
+        subquery = session.query(
+            History.Date,
+            History.Currency,
+            History.Rate,
+            row_number
+        ).subquery()
+
+        # 只取每组的第一名（即每个货币最新记录）
+        results = session.query(subquery).filter(subquery.c.rnk == 1).all()
+
+        data = [
+            {
+                "Date": row.Date.strftime("%Y-%m-%d %H:%M:%S"),
+                "Currency": row.Currency,
+                "Rate": row.Rate
+            }
+            for row in results
+        ]
+        return jsonify(data)
+    finally:
+        session.close()
+
+@main.route("/api/history/chart", methods=["GET"])
+def api_history_chart():
+    logger.info("访问了 /api/history/chart 获取历史数据")
+    session = Session()
+    try:
+        since = datetime.now() - timedelta(days=30)
+        records = (
+            session.query(History)
+            .filter(History.Date >= since)
+            .order_by(History.Date.asc())
+            .all()
+        )
+        data = {}
+        for row in records:
+            data.setdefault(row.Currency, []).append({
+                "date": row.Date.strftime("%Y-%m-%d"),
+                "rate": row.Rate
+            })
+        return jsonify(data)
+    finally:
+        session.close()
+        
+@main.route("/history", methods=["GET"])
+def history_page():
+    return render_template("history.html")
