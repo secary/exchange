@@ -69,7 +69,7 @@ LOGGING_CONFIG = {
             "propagate": False
         },
         "api": {
-            "handlers": ["api_file", "error_file"],
+            "handlers": ["api_file"],
             "level": "INFO",
             "propagate": False
         },
@@ -79,7 +79,7 @@ LOGGING_CONFIG = {
             "propagate": False
         },
         "app.services": {
-            "handlers": ["services_file", "error_file"],
+            "handlers": ["services_file"],
             "level": "DEBUG",
             "propagate": True
         },

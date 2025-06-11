@@ -5,7 +5,7 @@ import logging
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
-from app.models import History, Base
+from app.models import History
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,7 @@ CHINESE_TO_EN = {
     "欧元":       "EUR",
     # … 如有更多币种，继续填
 }
+
 
 def store_data(data_dict):
     all_data = []
