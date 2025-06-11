@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, DateTime, Float, PrimaryKeyConstraint
+from sqlalchemy import Column, String, DateTime, Float, Integer, Boolean
 
 Base = declarative_base()
 
@@ -18,10 +18,15 @@ class Threshold(Base):
     Upper = Column(Float)
     Lower = Column(Float)
 
-from sqlalchemy import Boolean
 
 class AutomationSwitch(Base):
     __tablename__ = 'auto_switch'
     
     key = Column(String(50), primary_key=True)  # 例如：'auto_enabled'
     value = Column(Boolean, nullable=False)  
+    
+class CurrencyMap(Base):
+    __tablename__ = "currency_map"
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    name_cn      = Column(String(20), unique=True, nullable=False)  # 中文名
+    code_en      = Column(String(10), unique=True, nullable=False)  # 英文代码

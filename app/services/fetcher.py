@@ -16,6 +16,17 @@ USER_AGENTS = [
     'Mozilla/5.0 (X11; Linux x86_64)...',
 ]
 
+from app.models import CurrencyMap
+from sqlalchemy.orm import sessionmaker
+from config.settings import get_engine
+
+# 在函数外初始化一次
+Session = sessionmaker(bind=get_engine())
+session = Session()
+rows = session.query(CurrencyMap).all()
+CN2EN = { r.name_cn: r.code_en for r in rows }
+session.close()
+
 def askurl(url, timeout=15, retries=3, delay=10):
     for attempt in range(1, retries + 1):
         user_agent = random.choice(USER_AGENTS)
@@ -58,7 +69,9 @@ def get_exchange_rate(url, currencies, timeout=15, retries=2, delay=10):
         if target_td:
             row = target_td.find_parent('tr')
             row_data = [td.get_text(strip=True) for td in row.find_all('td')]
-            result[row_data[0]] = {
+            name_cn = row_data[0]
+            name_en = CN2EN.get(name_cn, name_cn)
+            result[name_en] = {
                 "现汇卖出价": row_data[3],
                 "日期": row_data[6]
             }
