@@ -5,10 +5,11 @@ import logging
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
-from app.models import History, Base
+from app.models import History
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def store_data(data_dict):
     all_data = []
