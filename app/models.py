@@ -9,7 +9,7 @@ class History(Base):
     Date = Column(DateTime, primary_key=True)
     Currency = Column(String(20), primary_key=True)
     Rate = Column(Float)
-    Locals = Column(DateTime)
+    Locals = Column(String(50))
 
 class Threshold(Base):
     __tablename__ = 'thresholds'
@@ -30,3 +30,12 @@ class CurrencyMap(Base):
     id           = Column(Integer, primary_key=True, autoincrement=True)
     name_cn      = Column(String(20), unique=True, nullable=False)  # 中文名
     code_en      = Column(String(10), unique=True, nullable=False)  # 英文代码
+    
+    
+class Prediction(Base):
+    __tablename__ = "prediction"
+    Date = Column(DateTime, primary_key=True)
+    Currency = Column(String(20), primary_key=True)
+    Predicted_rate = Column(Float, nullable=False)
+    Locals = Column(String(50))
+    

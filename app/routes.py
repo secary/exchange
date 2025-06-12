@@ -9,10 +9,10 @@ from flask import Blueprint, jsonify, request, render_template
 from app.services.fetcher import get_exchange_rate
 from app.services.storage import store_data
 from config.settings import WEBSITE, CURRENCIES, get_engine
-from app.models import History, Threshold
+from app.models import History, Threshold, Prediction
 from sqlalchemy.orm import sessionmaker
 from app.models import AutomationSwitch
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import over
 from sqlalchemy import Integer
@@ -154,7 +154,7 @@ def get_latest_rates():
     logger.info("访问了 /api/latest 获取最新汇率")
     session = Session()
     try:
-        # 定义 row_number 窗口函数分组排名
+        # 1️⃣ 获取每种货币的最新一条历史记录
         row_number = func.row_number().over(
             partition_by=History.Currency,
             order_by=History.Date.desc()
@@ -167,18 +167,29 @@ def get_latest_rates():
             row_number
         ).subquery()
 
-        # 只取每组的第一名（即每个货币最新记录）
-        results = session.query(subquery).filter(subquery.c.rnk == 1).all()
+        latest_history = session.query(subquery).filter(subquery.c.rnk == 1).all()
 
-        data = [
-            {
+        response = []
+
+        # 2️⃣ 为每个历史记录找到相邻预测记录
+        for row in latest_history:
+            predicted = session.query(Prediction).filter(
+                and_(
+                    Prediction.Currency == row.Currency,
+                    Prediction.Date >= row.Date
+                )
+            ).order_by(Prediction.Date.asc()).first()
+
+            response.append({
                 "Date": row.Date.strftime("%Y-%m-%d %H:%M:%S"),
                 "Currency": row.Currency,
-                "Rate": row.Rate
-            }
-            for row in results
-        ]
-        return jsonify(data)
+                "Rate": row.Rate,
+                "PredictedRate": predicted.Predicted_rate if predicted else None,
+                "PredictionDate": predicted.Date.strftime("%Y-%m-%d %H:%M:%S") if predicted else None
+            })
+
+        return jsonify(response)
+
     finally:
         session.close()
 

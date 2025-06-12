@@ -6,7 +6,33 @@ import io
 import base64
 import matplotlib.pyplot as plt
 
-from app.Jervis.methods import fetch_history, build_sequences, split, load_latest_model, evaluate_metrics, scale, preprocess
+from app.prediction.methods import fetch_history, build_sequences, split, load_latest_model, evaluate_metrics, scale, preprocess
+
+from sqlalchemy.orm import sessionmaker
+from config.settings import get_engine  # 你已有这个
+from app.models import Prediction  # 你的 Prediction ORM
+
+def insert_predictions(df: pd.DataFrame):
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        for _, row in df.iterrows():
+            entry = Prediction(
+                Date=row["Date"],
+                Currency=row["Currency"],
+                Predicted_rate=row["Predicted_Rates"],
+                Locals=row["Locals"]
+            )
+            session.merge(entry)  # merge避免主键重复插入报错
+        session.commit()
+        print("✅ 数据成功导入 prediction 表")
+    except Exception as e:
+        session.rollback()
+        print("❌ 导入失败:", e)
+    finally:
+        session.close()
 
 
 def lstm_plot(df_predict, df_forecast, currency: str, days: int = 7) -> str:
@@ -33,7 +59,7 @@ def lstm_plot(df_predict, df_forecast, currency: str, days: int = 7) -> str:
 def main(currency: str, days: int=7):
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model_dir = "./app/Jervis/models/RateLSTM"
+    model_dir = "./app/prediction/models/RateLSTM"
     model = load_latest_model(model_dir, currency, device)
     
     currency = currency.upper()
@@ -54,7 +80,7 @@ def main(currency: str, days: int=7):
         "Currency": currency,
         "Rates": trues.flatten(),
         "Predicted_Rates": preds.flatten(),
-        "local": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
     })
     
     # Generate future predictions
@@ -79,20 +105,21 @@ def main(currency: str, days: int=7):
         "Date": future_dates,
         "Currency": currency,
         "Predicted_Rates": future.flatten(),
-        "local": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+        "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
     })
     
     
     plot = lstm_plot(df_predict, df_forecast, currency)
     
-    return df_forecast, plot
+    return df_forecast
 
 
 if __name__ == "__main__":
-    currency = input("Please input the currecy for forecast: ").upper()
-    result = main(currency)
-    result[0].to_csv(f'/home/mt/root/Janus/data/lstm_{currency}_{time.strftime("%Y%m%d", time.localtime())}.csv')
-    
+    # currency = input("Please input the currecy for forecast: ").upper()
+    aud = main('aud')
+    insert_predictions(aud)
+    jpy = main('jpy')
+    insert_predictions(jpy)
 
 
    
