@@ -9,23 +9,15 @@ from app.models import History
 import logging
 
 logger = logging.getLogger(__name__)
-CHINESE_TO_EN = {
-    "澳大利亚元": "AUD",          # 或者 "Australian Dollar"
-    "日元":       "JPY",          # 或者 "Japanese Yen"
-    "美元":       "USD",
-    "欧元":       "EUR",
-    # … 如有更多币种，继续填
-}
 
 
 def store_data(data_dict):
     all_data = []
 
     for currency, data in data_dict.items():
-        currency_en = CHINESE_TO_EN.get(currency, currency)
         row = {
             "Date": pd.to_datetime(data.get("日期"), errors="coerce"),
-            "Currency": currency_en,
+            "Currency": currency,
             "Rate": float(data.get("现汇卖出价")),
             "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
         }

@@ -17,7 +17,7 @@ CSV_FILE = os.path.join(BASE_DIR, "data", "ExchangeRates.csv")
 WEBSITE = "https://www.boc.cn/sourcedb/whpj/"
 
 # 货币列表
-CURRENCIES = ["澳大利亚元", "日元"]
+CURRENCIES = ["澳大利亚元", "日元", "美元"]
 
 # 数据库连接
 def get_engine():
