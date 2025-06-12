@@ -6,8 +6,9 @@ from typing import List, Dict, Any
 import os
 from datetime import datetime
 
-from methods import batchify, fetch_history, build_sequences, scale, split
-from models.lstm import RateLSTM
+from app.Jervis.methods import preprocess, fetch_history, build_sequences, scale, split
+from app.Jervis.models.lstm import RateLSTM  # ✅ 保持绝对路径
+
 
 def grid_search_lstm(
     X: torch.Tensor,
@@ -48,7 +49,7 @@ def grid_search_lstm(
 
                 if mse < best_mse:
                     best_mse = mse
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                    timestamp = datetime.now().strftime("%Y%m%d")
                     model_path = os.path.join(save_dir, f"{model.__class__.__name__}_{currency}_{timestamp}.pth")
                     model.save(model_path)
 
@@ -66,10 +67,7 @@ def grid_search_lstm(
 
 def main(currency: str):
     data = fetch_history(currency, days=30)
-    data = data.copy()[["Date", 'Rate']] 
-    data["Date"] = pd.to_datetime(data["Date"])
-    data = data.set_index("Date").sort_index()
-    data = data.resample("0.5h").mean().interpolate()
+    data = preprocess(data)
     data_scaled = scale(data[['Rate']])
 
     X, y = build_sequences(data_scaled, seq_len=48)
@@ -85,7 +83,7 @@ def main(currency: str):
         epoch_candidates=[50, 100],
         batch_candidates=[32, 64],
         lr_candidates=[1e-2, 1e-3, 1e-4],
-        save_dir=f"app/prediction/models/RateLSTM"
+        save_dir=f"app/Jervis/models/RateLSTM"
     )
 
     print(f"✅ Done. Best model saved to: {best_config['model_path']}")

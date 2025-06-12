@@ -12,7 +12,9 @@ from app.models import History
 
 from sklearn.preprocessing import MinMaxScaler
 import torch
-from models.lstm import RateLSTM
+from app.Jervis.models.lstm import RateLSTM  # ✅ 保持绝对路径
+
+
 
 scaler = MinMaxScaler()
 
@@ -64,43 +66,56 @@ def scale(x, scaler=scaler, inverse: bool=False):
     return scaler.inverse_transform(x)
 
      
-def build_sequences(series, seq_len):
+def build_sequences(series, seq_len, verbose: bool = False):
     X, y = [], []
     for i in range(len(series) - seq_len):
         X.append(series[i : i + seq_len])
         y.append(series[i + seq_len])
     X, y = np.array(X), np.array(y)
     
-    print(f"Tensor shape: {X.shape}")
+    if verbose:
+        print(f"Tensor shape: {X.shape}")
     return torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 
-def split(X, y, train_ratio: float) -> tuple:
+def split(X, y, train_ratio: float, verbose: bool = False) -> tuple:
     TRAIN_SIZE = int(len(X) * train_ratio)
     X_train, y_train = X[:TRAIN_SIZE], y[:TRAIN_SIZE]
     X_test,  y_test  = X[TRAIN_SIZE:], y[TRAIN_SIZE:]
     
-    print(f"Train size: {X_train.shape[0]}\nTest size: {X_test.shape[0]}")
+    if verbose:
+        print(f"Train size: {X_train.shape[0]}\nTest size: {X_test.shape[0]}")
     return X_train, y_train, X_test, y_test
     
 def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> RateLSTM:
     """
-    从指定目录中加载最新的 RateLSTM 模型（.pth 文件）
+    从指定目录中加载最新的 RateLSTM 模型（.pth 文件）。
+    如果找不到模型，将自动调用训练函数。
     """
-    # 获取所有 .pth 文件
-    currency = currency.upper()  # 转为大写以确保匹配
-    files = [
-        f for f in os.listdir(model_dir)
-        if f.endswith(".pth") and f"RateLSTM_{currency}_" in f
-    ]
+    currency = currency.upper()
+    os.makedirs(model_dir, exist_ok=True)
+    
+    def find_latest_file():
+        files = [
+            f for f in os.listdir(model_dir)
+            if f.endswith(".pth") and f"RateLSTM_{currency}_" in f
+        ]
+        files.sort()
+        return files[-1] if files else None
 
-    if not files:
-        raise FileNotFoundError(f"No .pth model files found for currency '{currency}' in {model_dir}")
+    # 尝试第一次查找模型
+    latest_file = find_latest_file()
 
-    files.sort()
-    latest_file = files[-1]
+    if not latest_file:
+        print(f"⚠️ 未找到 {currency} 模型，尝试自动训练...")
+        import app.Jervis.tune_lstm
+        app.Jervis.tune_lstm.main(currency)  # 自动训练
+        latest_file = find_latest_file()
+
+        if not latest_file:
+            raise FileNotFoundError(f"❌ 自动训练后仍未找到模型: {currency}")
+
     latest_path = os.path.join(model_dir, latest_file)
-
     print(f"🔍 Loading latest {currency} model: {latest_path}")
 
     model = RateLSTM().to(device)
@@ -143,9 +158,9 @@ def evaluate_metrics(y_true, y_pred, verbose: bool = True) -> dict:
         mape = np.nan
 
     if verbose:
-        print(f"MAE  : {mae:.4f}")
-        print(f"MSE  : {mse:.4f}")
-        print(f"RMSE : {rmse:.4f}")
+        print(f"MAE  : {mae:.8f}")
+        print(f"MSE  : {mse:.8f}")
+        print(f"RMSE : {rmse:.8f}")
         print(f"MAPE : {mape:.2f}%")
 
     return {
@@ -155,3 +170,9 @@ def evaluate_metrics(y_true, y_pred, verbose: bool = True) -> dict:
         "mape": mape
     }
     
+def preprocess(data: pd.DataFrame) -> pd.DataFrame:
+    data = data.copy()[["Date", 'Rate']] 
+    data["Date"] = pd.to_datetime(data["Date"])
+    data = data.set_index("Date").sort_index()
+    data = data.resample("0.5h").mean().interpolate()
+    return data
