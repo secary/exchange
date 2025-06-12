@@ -9,7 +9,7 @@ from app.models import History, Base
 
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("Janus")
 
 
 def store_data(data_dict):

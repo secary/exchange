@@ -1,9 +1,20 @@
+import logging.config
+import uuid
+from config.logger_config import LOGGING_CONFIG, trace_ids
+import os
+
+# 日志配置
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("jervis")
+
+# 设置 trace_id（和 Flask 请求无关时也初始化一个）
+trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
+trace_ids["jervis"].set(trace_id)
+logger.info(f"🔁 启动预测任务，TRACE_ID={trace_id}")
+
 import torch
-import pandas as pd
-import torch.nn as nn
 from sklearn.metrics import mean_squared_error
 from typing import List, Dict, Any
-import os
 from datetime import datetime
 
 from app.prediction.methods import preprocess, fetch_history, build_sequences, scale, split
@@ -45,7 +56,7 @@ def grid_search_lstm(
                 val_trues = y_val.cpu().numpy().flatten()
                 mse = mean_squared_error(val_trues, val_preds)
 
-                print(f"epochs={epochs}, batch={batch_size}, lr={lr:.4e} → val MSE={mse:.6f}")
+                logger.info(f"epochs={epochs}, batch={batch_size}, lr={lr:.4e} → val MSE={mse:.6f}")
 
                 if mse < best_mse:
                     best_mse = mse
@@ -61,7 +72,7 @@ def grid_search_lstm(
                         "model_path": model_path
                     }
 
-    print(f"\n✅ Best config saved to {best_cfg['model_path']}: {best_cfg}")
+    logger.info(f"\n✅ Best config saved to {best_cfg['model_path']}: {best_cfg}")
     return best_cfg
 
 

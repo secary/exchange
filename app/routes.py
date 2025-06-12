@@ -1,9 +1,14 @@
 import os
-import logging
+import logging.config
+import uuid
+from config.logger_config import trace_ids
 
-logger = logging.getLogger("api")
-logger.info("✅ 初始化 API 路由")
-logger_auto = logging.getLogger("auto")
+# 设置 trace_id（如果从 shell 传入了 TRACE_ID 环境变量则使用，否则生成新的）
+trace_id = f"JAVELIN-{uuid.uuid4()}"
+trace_ids["javelin"].set(trace_id)
+
+logger = logging.getLogger("javelin")
+
 
 from flask import Blueprint, jsonify, request, render_template
 from app.services.fetcher import get_exchange_rate
@@ -140,7 +145,6 @@ def toggle_switch():
         session.commit()
         status_str = "开启" if switch.value else "关闭"
         logger.info(f"✅ 自动化开关已设置为：{status_str}")
-        logger_auto.info(f"✅ 自动化开关已设置为：{status_str}")
         return jsonify({"status": status_str})
     except Exception as e:
         session.rollback()

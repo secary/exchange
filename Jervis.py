@@ -1,3 +1,17 @@
+import logging.config
+import uuid
+from config.logger_config import LOGGING_CONFIG, trace_ids
+import os
+
+# 日志配置
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("jervis")
+
+# 设置 trace_id（和 Flask 请求无关时也初始化一个）
+trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
+trace_ids["jervis"].set(trace_id)
+logger.info(f"🔁 启动预测任务，TRACE_ID={trace_id}")
+
 import pandas as pd
 import numpy as np
 import torch
@@ -7,10 +21,9 @@ import base64
 import matplotlib.pyplot as plt
 
 from app.prediction.methods import fetch_history, build_sequences, split, load_latest_model, evaluate_metrics, scale, preprocess
-
 from sqlalchemy.orm import sessionmaker
-from config.settings import get_engine  # 你已有这个
-from app.models import Prediction  # 你的 Prediction ORM
+from config.settings import get_engine, CURRENCIES # 你已有这个
+from app.models import Prediction, CurrencyMap  # 你的 Prediction ORM
 
 def insert_predictions(df: pd.DataFrame):
     engine = get_engine()
@@ -27,10 +40,10 @@ def insert_predictions(df: pd.DataFrame):
             )
             session.merge(entry)  # merge避免主键重复插入报错
         session.commit()
-        print("✅ 数据成功导入 prediction 表")
+        logger.info("✅ 数据成功导入 prediction 表")
     except Exception as e:
         session.rollback()
-        print("❌ 导入失败:", e)
+        logger.error("❌ 导入失败:", e)
     finally:
         session.close()
 
@@ -55,6 +68,24 @@ def lstm_plot(df_predict, df_forecast, currency: str, days: int = 7) -> str:
 
     img_base64 = base64.b64encode(buf.read()).decode("utf-8")
     return img_base64  # 可直接嵌入 HTML
+
+
+
+def get_currency_code(name_cn: str) -> str:
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        result = session.query(CurrencyMap).filter_by(name_cn=name_cn).first()
+        if result:
+            return result.code_en
+        else:
+            logger.warning(f"⚠️ 数据库中未能找到{name_cn}")
+            return None
+         
+    finally:
+        session.close()
 
 def main(currency: str, days: int=7):
     
@@ -110,16 +141,20 @@ def main(currency: str, days: int=7):
     
     
     plot = lstm_plot(df_predict, df_forecast, currency)
-    
+    logger.info(f"🔮 未来{days}内{currency}预测完成，共 {len(df_forecast)} 条")
     return df_forecast
 
 
 if __name__ == "__main__":
-    # currency = input("Please input the currecy for forecast: ").upper()
-    aud = main('aud')
-    insert_predictions(aud)
-    jpy = main('jpy')
-    insert_predictions(jpy)
-
-
+    try:
+        for currency in CURRENCIES:
+            currency_en = get_currency_code(currency)
+            if len(fetch_history(currency_en, 30)) < 500:
+                pass
+                logger.info(f"⚠️ 当前{currency}数据不足，暂不预测")
+            else:
+                main(currency_en)
+                logger.info(f"🔮 {currency}预测完成")
+    except Exception as e:
+        logger.exception(f"❌ 出现错误：{e}")  # 包含堆栈 trace_id
    

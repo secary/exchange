@@ -6,10 +6,16 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
 from app.models import History
-import logging
+import uuid
+import logging.config
+from config.logger_config import LOGGING_CONFIG, trace_ids
 
-logger = logging.getLogger(__name__)
+# 🚨 一定要在 loggers 初始化前设置 trace_id
+trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
+trace_ids["janus"].set(trace_id )  # fallback only if not set
 
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("janus")
 
 def store_data(data_dict):
     all_data = []
