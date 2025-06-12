@@ -6,8 +6,8 @@ from typing import List, Dict, Any
 import os
 from datetime import datetime
 
-from app.Jervis.methods import preprocess, fetch_history, build_sequences, scale, split
-from app.Jervis.models.lstm import RateLSTM  # ✅ 保持绝对路径
+from app.prediction.methods import preprocess, fetch_history, build_sequences, scale, split
+from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
 
 
 def grid_search_lstm(
@@ -83,7 +83,7 @@ def main(currency: str):
         epoch_candidates=[50, 100],
         batch_candidates=[32, 64],
         lr_candidates=[1e-2, 1e-3, 1e-4],
-        save_dir=f"app/Jervis/models/RateLSTM"
+        save_dir=f"app/prediction/models/RateLSTM"
     )
 
     print(f"✅ Done. Best model saved to: {best_config['model_path']}")
