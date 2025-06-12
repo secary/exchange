@@ -1,21 +1,18 @@
 import urllib.request
 import urllib.error
 from bs4 import BeautifulSoup
+
 import time
-
 import random
-import os
 
+import os
 import uuid
 import logging.config
 from config.logger_config import LOGGING_CONFIG, trace_ids
 
 # 🚨 一定要在 loggers 初始化前设置 trace_id
-trace_id_from_env = os.getenv("TRACE_ID")
-if trace_id_from_env:
-    trace_ids["janus"].set(trace_id_from_env)
-else:
-    trace_ids["janus"].set(f"JANUS-{uuid.uuid4()}")  # fallback only if not set
+trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
+trace_ids["janus"].set(trace_id )  # fallback only if not set
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("janus")
