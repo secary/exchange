@@ -12,7 +12,7 @@ from app.models import History
 
 from sklearn.preprocessing import MinMaxScaler
 import torch
-from app.Jervis.models.lstm import RateLSTM  # ✅ 保持绝对路径
+from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
 
 
 
@@ -108,8 +108,8 @@ def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> Rat
 
     if not latest_file:
         print(f"⚠️ 未找到 {currency} 模型，尝试自动训练...")
-        import app.Jervis.tune_lstm
-        app.Jervis.tune_lstm.main(currency)  # 自动训练
+        import app.prediction.tune_lstm
+        app.prediction.tune_lstm.main(currency)  # 自动训练
         latest_file = find_latest_file()
 
         if not latest_file:
