@@ -1,8 +1,11 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+
+from config.logger_config import LOGGING_CONFIG, trace_ids
 import logging.config
 import uuid
-from config.logger_config import LOGGING_CONFIG, trace_ids
-import os
-
 # 日志配置
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("jervis")
@@ -10,7 +13,7 @@ logger = logging.getLogger("jervis")
 # 设置 trace_id（和 Flask 请求无关时也初始化一个）
 trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
 trace_ids["jervis"].set(trace_id)
-logger.info(f"🔁 启动预测任务，TRACE_ID={trace_id}")
+
 
 import torch
 from sklearn.metrics import mean_squared_error
@@ -19,7 +22,16 @@ from datetime import datetime
 
 from app.prediction.methods import preprocess, fetch_history, build_sequences, scale, split
 from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
+from config.settings import get_currency_code, CURRENCIES
 
+# 获取项目根目录（从 tune_lstm.py 向上三级）
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
+# 构造模型保存路径
+MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
+
+# logger.info(BASE_DIR)
+# logger.info(MODEL_DIR)
 
 def grid_search_lstm(
     X: torch.Tensor,
@@ -76,7 +88,7 @@ def grid_search_lstm(
     return best_cfg
 
 
-def main(currency: str):
+def main(currency: str, model_dir=MODEL_DIR):
     data = fetch_history(currency, days=30)
     data = preprocess(data)
     data_scaled = scale(data[['Rate']])
@@ -94,11 +106,24 @@ def main(currency: str):
         epoch_candidates=[50, 100],
         batch_candidates=[32, 64],
         lr_candidates=[1e-2, 1e-3, 1e-4],
-        save_dir=f"app/prediction/models/RateLSTM"
+        save_dir=model_dir
     )
 
-    print(f"✅ Done. Best model saved to: {best_config['model_path']}")
+    logger.info(f"✅ Done. Best model saved to: {best_config['model_path']}")
 
 if __name__ == "__main__":
-    currency = input("Please input the currecy for forecast: ").upper()
-    main(currency)
+    try:
+        for currency in CURRENCIES:
+            currency_en = get_currency_code(currency)
+            if not currency_en:
+                logger.warning(f"⚠️ {currency}未存在于数据库内")
+            if len(fetch_history(currency_en, 30)) < 500:
+                pass
+                logger.warning(f"⚠️ 当前{currency}数据不足，暂不训练")
+            else:
+                logger.info(f"🔁 启动{currency_en}汇率LSTM调优，TRACE_ID={trace_id}")
+                main(currency_en)
+                logger.info(f"🔮 {currency}LSTM预测调优完成")
+    except Exception as e:
+        logger.exception(f"❌ 出现错误：{e}")  # 包含堆栈 trace_id
+   

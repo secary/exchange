@@ -14,7 +14,16 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
 
+from config.logger_config import LOGGING_CONFIG, trace_ids
+import logging.config
+import uuid
+# 日志配置
+logging.config.dictConfig(LOGGING_CONFIG)
+logger = logging.getLogger("jervis")
 
+# 设置 trace_id（和 Flask 请求无关时也初始化一个）
+trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
+trace_ids["jervis"].set(trace_id)
 
 scaler = MinMaxScaler()
 
@@ -107,16 +116,16 @@ def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> Rat
     latest_file = find_latest_file()
 
     if not latest_file:
-        print(f"⚠️ 未找到 {currency} 模型，尝试自动训练...")
+        logger.error(f"⚠️ 未找到 {currency} 模型，尝试自动训练...")
         import app.prediction.tune_lstm
         app.prediction.tune_lstm.main(currency)  # 自动训练
         latest_file = find_latest_file()
 
         if not latest_file:
-            raise FileNotFoundError(f"❌ 自动训练后仍未找到模型: {currency}")
+            logger.error(f"❌ 自动训练后仍未找到模型: {currency}")
 
     latest_path = os.path.join(model_dir, latest_file)
-    print(f"🔍 Loading latest {currency} model: {latest_path}")
+    logger.info(f"🔍 Loading latest {currency} model: {latest_path}")
 
     model = RateLSTM().to(device)
     model.load_state_dict(torch.load(latest_path, map_location=device))

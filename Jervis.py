@@ -3,6 +3,10 @@ import uuid
 from config.logger_config import LOGGING_CONFIG, trace_ids
 import os
 
+# 获取项目根目录（Jervis.py 所在目录的上一级）
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
+
 # 日志配置
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger("jervis")
@@ -22,8 +26,8 @@ import matplotlib.pyplot as plt
 
 from app.prediction.methods import fetch_history, build_sequences, split, load_latest_model, evaluate_metrics, scale, preprocess
 from sqlalchemy.orm import sessionmaker
-from config.settings import get_engine, CURRENCIES # 你已有这个
-from app.models import Prediction, CurrencyMap  # 你的 Prediction ORM
+from config.settings import get_engine, get_currency_code, CURRENCIES # 你已有这个
+from app.models import Prediction # 你的 Prediction ORM
 
 def insert_predictions(df: pd.DataFrame):
     engine = get_engine()
@@ -48,71 +52,31 @@ def insert_predictions(df: pd.DataFrame):
         session.close()
 
 
-def lstm_plot(df_predict, df_forecast, currency: str, days: int = 7) -> str:
-    plt.figure(figsize=(14, 6))
-    plt.plot(df_predict["Date"], df_predict["Rates"], label="Actual", linewidth=2)
-    plt.plot(df_predict["Date"], df_predict["Predicted_Rates"], label="Predicted", linewidth=2)
-    plt.plot(df_forecast["Date"], df_forecast["Predicted_Rates"], label="Forecast", linestyle="--")
-    plt.xlabel("Date")
-    plt.ylabel("Exchange Rate")
-    plt.title(f"{currency.upper()} Exchange Rate Prediction + {days}-Day Forecast")
-    plt.legend()
-    plt.grid()
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format="png")
-    plt.close()
-    buf.seek(0)
-
-    img_base64 = base64.b64encode(buf.read()).decode("utf-8")
-    return img_base64  # 可直接嵌入 HTML
-
-
-
-def get_currency_code(name_cn: str) -> str:
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    try:
-        result = session.query(CurrencyMap).filter_by(name_cn=name_cn).first()
-        if result:
-            return result.code_en
-        else:
-            logger.warning(f"⚠️ 数据库中未能找到{name_cn}")
-            return None
-         
-    finally:
-        session.close()
-
 def main(currency: str, days: int=7):
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model_dir = "./app/prediction/models/RateLSTM"
-    model = load_latest_model(model_dir, currency, device)
+    model = load_latest_model(MODEL_DIR, currency, device)
     
     currency = currency.upper()
     df = preprocess(fetch_history(currency, 30))
     data = scale(df[['Rate']])
 
     seq = 48
-    X, y = build_sequences(data, seq)
-    X_train, y_train, X_test, y_test = split(X, y, 0.8)
+    # X, y = build_sequences(data, seq)
+    # X_train, y_train, X_test, y_test = split(X, y, 0.8)
 
 
-    preds = scale(model.predict(X_test).cpu().numpy(), inverse=True)
-    trues = scale(y_test.cpu().numpy(), inverse=True)
-    dates = df.index[seq + len(X_train):]
+    # preds = scale(model.predict(X_test).cpu().numpy(), inverse=True)
+    # trues = scale(y_test.cpu().numpy(), inverse=True)
+    # dates = df.index[seq + len(X_train):]
 
-    df_predict = pd.DataFrame({
-        "Date": dates,
-        "Currency": currency,
-        "Rates": trues.flatten(),
-        "Predicted_Rates": preds.flatten(),
-        "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
-    })
+    # df_predict = pd.DataFrame({
+    #     "Date": dates,
+    #     "Currency": currency,
+    #     "Rates": trues.flatten(),
+    #     "Predicted_Rates": preds.flatten(),
+    #     "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
+    # })
     
     # Generate future predictions
     future_steps = days * seq
@@ -140,7 +104,6 @@ def main(currency: str, days: int=7):
     })
     
     
-    plot = lstm_plot(df_predict, df_forecast, currency)
     logger.info(f"🔮 未来{days}内{currency}预测完成，共 {len(df_forecast)} 条")
     return df_forecast
 
@@ -149,9 +112,11 @@ if __name__ == "__main__":
     try:
         for currency in CURRENCIES:
             currency_en = get_currency_code(currency)
+            if not currency_en:
+                logger.warning(f"⚠️ {currency}未存在于数据库内")
             if len(fetch_history(currency_en, 30)) < 500:
                 pass
-                logger.info(f"⚠️ 当前{currency}数据不足，暂不预测")
+                logger.warning(f"⚠️ 当前{currency}数据不足，暂不预测")
             else:
                 main(currency_en)
                 logger.info(f"🔮 {currency}预测完成")

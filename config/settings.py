@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from app.models import CurrencyMap
+from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
@@ -25,3 +27,17 @@ def get_engine():
         f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}/{DB_CONFIG['database']}"
     )
 
+def get_currency_code(name_cn: str) -> str:
+    engine = get_engine()
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        result = session.query(CurrencyMap).filter_by(name_cn=name_cn).first()
+        if result:
+            return result.code_en
+        else:
+            return None
+         
+    finally:
+        session.close()
