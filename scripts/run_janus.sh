@@ -6,35 +6,31 @@ LOG_DIR="$BASE_DIR/logs"
 LOG_FILE="$LOG_DIR/Janus.log"
 mkdir -p "$LOG_DIR"
 
-# 获取当前脚本文件名
+# 当前脚本名
 SCRIPT_NAME="$(basename "$0")"
 
-# 生成 trace_id 并注入全局变量
+# trace_id 注入给 Python（并在 Shell 日志中复用）
 export TRACE_ID_JANUS="JANUS-$(uuidgen)"
 
-# 日志函数（方法一：显式传入脚本名）
+# ✅ shell 层日志，直接写入 Janus.log
 log() {
   local level="$1"
-  local script="$2"
-  local message="$3"
+  local message="$2"
   local timestamp="$(date '+%Y-%m-%d %H:%M:%S,%3N')"
-  local log_line="$timestamp [$level] $script [trace_id=${TRACE_ID_JANUS}]: $message"
-
-  echo "$log_line" >> "$LOG_FILE"
-  [[ "$level" == "WARNING" || "$level" == "ERROR" ]] && echo "$log_line"
+  echo "$timestamp [$level] $SCRIPT_NAME [trace_id=${TRACE_ID_JANUS}]: $message" >> "$LOG_FILE"
 }
 
-# ✅ 使用时手动传入 $SCRIPT_NAME
-log INFO "$SCRIPT_NAME" "🔁 启动自动化任务"
-log INFO "$SCRIPT_NAME" "🚀 执行 Janus.py"
+log INFO "🔁 启动自动化任务"
+log INFO "🚀 执行 Janus.py"
 
-PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/Janus.py"
+# ✅ 执行 Python，但不写 stdout/stderr，只写 loguru
+PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/Janus.py" >/dev/null 2>&1
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
-  log INFO "$SCRIPT_NAME" "✅ 脚本执行成功"
+  log INFO "✅ 脚本执行成功"
 else
-  log ERROR "$SCRIPT_NAME" "❌ 脚本执行失败，退出码 $STATUS"
+  log ERROR "❌ 脚本执行失败，退出码 $STATUS"
 fi
 
 exit $STATUS

@@ -1,5 +1,13 @@
 import sys
 import os
+from loguru import logger
+import uuid
+from config.logger_config import trace_ids
+
+# 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
+trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
+trace_ids["jervis"].set(trace_id)
+
 # 自动加入项目根目录到 sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
@@ -14,16 +22,6 @@ from sklearn.preprocessing import MinMaxScaler
 import torch
 from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
 
-from config.logger_config import LOGGING_CONFIG, trace_ids
-import logging.config
-import uuid
-# 日志配置
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("jervis")
-
-# 设置 trace_id（和 Flask 请求无关时也初始化一个）
-trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
-trace_ids["jervis"].set(trace_id)
 
 scaler = MinMaxScaler()
 

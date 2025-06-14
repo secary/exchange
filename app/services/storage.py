@@ -1,21 +1,21 @@
 import os
+import uuid
 import pandas as pd
-import time
-import logging
+from loguru import logger
+from config.logger_config import trace_ids  # ✅ 引入 trace_ids，上下文追踪
+
+# 设置 trace_id（在初始化前设定）
+trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
+trace_ids["janus"].set(trace_id)
+
+# 绑定 loguru logger（重要：为日志分类添加标识）
+logger = logger.bind(name="janus")
+
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
 from app.models import History
-import uuid
-import logging.config
-from config.logger_config import LOGGING_CONFIG, trace_ids
-
-# 🚨 一定要在 loggers 初始化前设置 trace_id
-trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
-trace_ids["janus"].set(trace_id )  # fallback only if not set
-
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("janus")
+import time
 
 def store_data(data_dict):
     all_data = []

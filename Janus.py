@@ -1,30 +1,33 @@
 import os
 import uuid
-import logging.config
-from config.logger_config import LOGGING_CONFIG, trace_ids
+import pandas as pd
+from loguru import logger
+from config.logger_config import trace_ids  # ✅ 引入 trace_ids，上下文追踪
 
-# 🚨 一定要在 loggers 初始化前设置 trace_id
+# 设置 trace_id（在初始化前设定）
 trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
-trace_ids["janus"].set(trace_id )  # fallback only if not set
+trace_ids["janus"].set(trace_id)
 
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("janus")
+# 绑定 loguru logger（重要：为日志分类添加标识）
+logger = logger.bind(name="janus")
 
 # 模块功能导入
 from app.services.fetcher import get_exchange_rate
 from app.services.storage import store_data
 from config.settings import WEBSITE, CURRENCIES
-import pandas as pd
 
 
 def main():
     try:
-        logger.info(f"开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
+        logger.info(f"⚓ 开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
         logger.info(f"数据来源：{WEBSITE}")
         
         rates_data = get_exchange_rate(WEBSITE, CURRENCIES)
-        store_data(rates_data)
+        if not rates_data:
+            logger.warning("⚠️ 未获取任何汇率数据")
+            return
 
+        store_data(rates_data)
         logger.info("汇率数据抓取完成")
 
         # 输出数据为 DataFrame
@@ -32,7 +35,7 @@ def main():
         print(f"当前汇率：\n{df}")
 
     except Exception as e:
-        logger.exception(f"❌ 出现错误：{e}")  # 包含堆栈 trace_id
+        logger.exception(f"❌ 出现错误：{e}")
 
 if __name__ == '__main__':
     logger.info("Janus、了解！任せなさい！")

@@ -1,13 +1,11 @@
-import logging
 import uuid
-import logging.config  # ✅ 加载日志配置模块
+from loguru import logger
 from flask import Flask, request, g
 from app.routes import main
-from config.logger_config import LOGGING_CONFIG, trace_ids  # ✅ 自定义日志配置和 trace_id 存储
+from config.logger_config import trace_ids  # ✅ 自定义日志配置和 trace_id 存储
 
 # 初始化日志配置
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("javelin")
+logger = logger.bind(name="Javelin")
 
 def create_app():
     app = Flask(__name__)

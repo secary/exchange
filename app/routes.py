@@ -1,13 +1,14 @@
 import os
-import logging.config
 import uuid
+from loguru import logger
 from config.logger_config import trace_ids
 
-# 设置 trace_id（如果从 shell 传入了 TRACE_ID 环境变量则使用，否则生成新的）
-trace_id = f"JAVELIN-{uuid.uuid4()}"
+# 设置 trace_id（适用于主进程或脚本执行）
+trace_id = os.getenv("TRACE_ID_JAVELIN") or f"JAVELIN-{uuid.uuid4()}"
 trace_ids["javelin"].set(trace_id)
 
-logger = logging.getLogger("javelin")
+# 绑定 loguru logger（确保日志输出至 Javelin.log）
+logger = logger.bind(name="javelin")
 
 
 from flask import Blueprint, jsonify, request, render_template
@@ -119,39 +120,39 @@ def api_config_post():
     finally:
         session.close()
 
-@main.route("/api/switch/status", methods=["GET"])
-def get_switch_status():
-    logger.info("访问了 /api/switch/status 获取当前自动化状态")
-    session = Session()
-    try:
-        switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
-        status_str = "开启" if (switch and switch.value) else "关闭"
-        return jsonify({"status": status_str})
-    finally:
-        session.close()
+# @main.route("/api/switch/status", methods=["GET"])
+# def get_switch_status():
+#     logger.info("访问了 /api/switch/status 获取当前自动化状态")
+#     session = Session()
+#     try:
+#         switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
+#         status_str = "开启" if (switch and switch.value) else "关闭"
+#         return jsonify({"status": status_str})
+#     finally:
+#         session.close()
 
 
-@main.route("/api/switch/toggle", methods=["POST"])
-def toggle_switch():
-    logger.info("访问了 /api/switch/toggle 切换自动化状态")
-    session = Session()
-    try:
-        switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
-        if switch:
-            switch.value = not switch.value
-        else:
-            switch = AutomationSwitch(key="auto_enabled", value=True)
-            session.add(switch)
-        session.commit()
-        status_str = "开启" if switch.value else "关闭"
-        logger.info(f"✅ 自动化开关已设置为：{status_str}")
-        return jsonify({"status": status_str})
-    except Exception as e:
-        session.rollback()
-        logger.error(f"切换自动化开关失败: {e}")
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
+# @main.route("/api/switch/toggle", methods=["POST"])
+# def toggle_switch():
+#     logger.info("访问了 /api/switch/toggle 切换自动化状态")
+#     session = Session()
+#     try:
+#         switch = session.query(AutomationSwitch).filter_by(key="auto_enabled").first()
+#         if switch:
+#             switch.value = not switch.value
+#         else:
+#             switch = AutomationSwitch(key="auto_enabled", value=True)
+#             session.add(switch)
+#         session.commit()
+#         status_str = "开启" if switch.value else "关闭"
+#         logger.info(f"✅ 自动化开关已设置为：{status_str}")
+#         return jsonify({"status": status_str})
+#     except Exception as e:
+#         session.rollback()
+#         logger.error(f"切换自动化开关失败: {e}")
+#         return jsonify({"error": str(e)}), 500
+#     finally:
+#         session.close()
 
 @main.route("/api/latest", methods=["GET"])
 def get_latest_rates():
@@ -199,23 +200,63 @@ def get_latest_rates():
 
 @main.route("/api/history/chart", methods=["GET"])
 def api_history_chart():
-    logger.info("访问了 /api/history/chart 获取历史数据")
+    logger.info("访问了 /api/history/chart 获取历史+预测数据")
     session = Session()
     try:
-        since = datetime.now() - timedelta(days=30)
-        records = (
-            session.query(History)
-            .filter(History.Date >= since)
-            .order_by(History.Date.asc())
+        now = datetime.now()
+        since = now - timedelta(days=30)
+
+        # 读取历史记录
+        history_rows = session.query(History).filter(History.Date >= since).all()
+        from sqlalchemy.sql import func
+
+        # 获取每种货币的最早一条未来预测
+        subq = (
+            session.query(
+                Prediction.Currency,
+                func.min(Prediction.Date).label("min_date")
+            )
+            .filter(Prediction.Date >= datetime.now())
+            .group_by(Prediction.Currency)
+            .subquery()
+        )
+
+        prediction_rows = (
+            session.query(Prediction)
+            .join(subq, (Prediction.Currency == subq.c.Currency) & (Prediction.Date == subq.c.min_date))
             .all()
         )
-        data = {}
-        for row in records:
-            data.setdefault(row.Currency, []).append({
-                "date": row.Date.strftime("%Y-%m-%d"),
-                "rate": row.Rate
-            })
-        return jsonify(data)
+        
+        # 整理为 Currency -> datetime -> value
+        from collections import defaultdict
+
+        history_map = defaultdict(dict)
+        for row in history_rows:
+            timestamp = row.Date.replace(second=0, microsecond=0)
+            history_map[row.Currency][timestamp] = row.Rate
+
+        prediction_map = defaultdict(dict)
+        for row in prediction_rows:
+            timestamp = row.Date.replace(second=0, microsecond=0)
+            prediction_map[row.Currency][timestamp] = row.Predicted_rate
+
+        # 汇总所有时间点
+        response = {}
+        for currency in set(list(history_map.keys()) + list(prediction_map.keys())):
+            all_times = sorted(set(history_map[currency].keys()) | set(prediction_map[currency].keys()))
+            merged = []
+            for dt in all_times:
+                rate = history_map[currency].get(dt)
+                predicted = None if rate is not None else prediction_map[currency].get(dt)
+                merged.append({
+                    "datetime": dt.strftime("%Y-%m-%d %H:%M:%S"),
+                    "rate": rate,
+                    "predicted": predicted
+                })
+            response[currency] = merged
+
+        return jsonify(response)
+
     finally:
         session.close()
         

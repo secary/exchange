@@ -1,22 +1,21 @@
+import os
+import uuid
+import pandas as pd
+from loguru import logger
+from config.logger_config import trace_ids  # ✅ 引入 trace_ids，上下文追踪
+
+# 设置 trace_id（在初始化前设定）
+trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
+trace_ids["janus"].set(trace_id)
+
+# 绑定 loguru logger（重要：为日志分类添加标识）
+logger = logger.bind(name="janus")
+
 import urllib.request
 import urllib.error
 from bs4 import BeautifulSoup
-
 import time
 import random
-
-import os
-import uuid
-import logging.config
-from config.logger_config import LOGGING_CONFIG, trace_ids
-
-# 🚨 一定要在 loggers 初始化前设置 trace_id
-trace_id = os.getenv("TRACE_ID_JANUS") or f"JANUS-{uuid.uuid4()}"
-trace_ids["janus"].set(trace_id )  # fallback only if not set
-
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("janus")
-
 
 # 多个 User-Agent 列表
 USER_AGENTS = [
@@ -48,9 +47,9 @@ def askurl(url, timeout=15, retries=3, delay=10):
             logger.debug(f"✅ 第 {attempt} 次请求成功，User-Agent: {user_agent}")
             return html
         except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
-            logger.warning(f"第 {attempt} 次请求失败，原因: {e}")
+            logger.warning(f"⚠️ 第 {attempt} 次请求失败，原因: {e}")
         except Exception as e:
-            logger.exception(f"第 {attempt} 次请求发生意外错误: {e}")
+            logger.exception(f"❌ 第 {attempt} 次请求发生意外错误: {e}")
 
         if attempt < retries:
             sleep_time = delay + random.uniform(2, 5)
@@ -60,7 +59,7 @@ def askurl(url, timeout=15, retries=3, delay=10):
     logger.error(f"❌ 所有 {retries} 次尝试均失败，放弃请求。")
     return None
 
-def get_exchange_rate(url, currencies, timeout=15, retries=2, delay=10):
+def get_exchange_rate(url, currencies, timeout=15, retries=2, delay=10, save_html=False):
     if not isinstance(currencies, list):
         logger.error("❌ currencies 参数必须是一个列表")
         return {}
@@ -84,15 +83,18 @@ def get_exchange_rate(url, currencies, timeout=15, retries=2, delay=10):
                 "现汇卖出价": row_data[3],
                 "日期": row_data[6]
             }
+        
         else:
             logger.warning(f"❌ 未找到包含 '{currency}' 的 <td> 标签")
-
-    if not result:
-        os.makedirs("data", exist_ok=True)
-        failed_path = os.path.join("data", "failed_response.html")
-        with open(failed_path, "w", encoding="utf-8") as f:
+            
+    if save_html:
+        timestamp = time.strftime("%Y%m%d_%H%M%S")  # 正确、安全的时间格式
+        file = f'source_{timestamp}.html'
+        path = os.path.join('data', 'source', file)
+        os.makedirs(os.path.dirname(path), exist_ok=True)  # 确保目录存在
+        with open(path, "w", encoding="utf-8") as f:
             f.write(html)
-        logger.warning(f"⚠️ 抓取失败，原始 HTML 已保存到 {failed_path}")
+        logger.info(f"📁 html源文件已保存至 {path}")
 
     logger.debug(f"汇率抓取结果: {result}")
     return result

@@ -1,173 +1,274 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Janus API 服务</title>
     <style>
-        body { font-family: sans-serif; padding: 2em; max-width: 960px; margin: auto; }
-        h1 { color: #2c3e50; }
-        ul { line-height: 1.8em; }
-        code { background: #f4f4f4; padding: 0.2em 0.5em; border-radius: 4px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 1em; }
-        th, td { padding: 8px 12px; border: 1px solid #ccc; text-align: center; }
-        select, button { padding: 6px 12px; margin-top: 10px; }
+      body {
+        font-family: sans-serif;
+        padding: 2em;
+        max-width: 960px;
+        margin: auto;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      ul {
+        line-height: 1.8em;
+      }
+      code {
+        background: #f4f4f4;
+        padding: 0.2em 0.5em;
+        border-radius: 4px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 1em;
+      }
+      th,
+      td {
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        text-align: center;
+      }
+      select,
+      button {
+        padding: 6px 12px;
+        margin-top: 10px;
+      }
     </style>
-
-    <!-- Chart.js 主库 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js Zoom 插件 -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-</head>
-<body>
-    <h1>🌐 Hi！私の名前はJanus!<br>
-        そうよ、あのJervisの僚艦の……<br>
-        え、知らない?完っ全にモグリね。<br>
-        いい?しっかり覚えておきなさい!</h1>
+  </head>
+  <body>
+    <h1>🌐 Hi！私の名前はJanus!</h1>
 
     <h2>⚓ 可用接口：</h2>
     <ul>
-        <li><code>GET /api/config</code> - 查看或更新监控配置</li>
-        <li><code>POST /api/fetch</code> - 手动抓取汇率数据</li>
-        <li><code>GET /api/history</code> - 查看历史记录</li>
-        <li><code>GET /api/logs/latest</code> - 查看最新日志</li>
+      <li><code>GET /api/config</code> - 查看或更新监控配置</li>
+      <li><code>POST /api/fetch</code> - 手动抓取汇率数据</li>
+      <li><code>GET /api/history</code> - 查看历史记录</li>
+      <li><code>GET /api/logs/latest</code> - 查看最新日志</li>
     </ul>
-
-    <h2>⚙️ 自动化控制</h2>
-    <p>当前状态：<span id="status">未知</span></p>
-    <button onclick="toggleSwitch()">切换自动开关</button>
 
     <h2>📊 最新汇率</h2>
     <table id="rateTable">
-        <thead>
-            <tr>
-                <th>日期</th>
-                <th>货币</th>
-                <th>汇率</th>
-                <th>预测汇率</th>       <!-- ✅ 新增 -->
-                <th>预测时间</th>       <!-- ✅ 新增 -->
-            </tr>
-        </thead>
-        <tbody></tbody>
+      <thead>
+        <tr>
+          <th>日期</th>
+          <th>货币</th>
+          <th>汇率</th>
+          <th>预测汇率</th>
+          <th>预测时间</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     </table>
 
     <h2>📈 汇率走势图</h2>
     <select id="currencySelect" onchange="updateChart()"></select>
-    <canvas id="rateChart" width="800" height="300" style="max-width: 100%; margin-top: 1em;"></canvas>
+    <canvas
+      id="rateChart"
+      width="800"
+      height="300"
+      style="max-width: 100%; margin-top: 1em"
+    ></canvas>
 
     <h2>🔎 查看完整历史数据</h2>
-    <a href="/history" target="_blank">
-        <button>查看历史记录表</button>
-    </a>
+    <a href="/history" target="_blank"><button>查看历史记录表</button></a>
 
     <script>
-        let chartInstance = null;
-        let allData = {};
+      let chartInstance = null;
+      let allData = {};
 
-        function toggleSwitch() {
-            fetch('/api/switch/toggle', { method: 'POST' })
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("status").textContent = data.status;
-                });
-        }
-
-        function loadLatestRates() {
-            fetch('/api/latest')
-                .then(res => res.json())
-                .then(data => {
-                    const tbody = document.querySelector("#rateTable tbody");
-                    tbody.innerHTML = "";
-                    data.forEach(row => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${row.Date}</td>
-                            <td>${row.Currency}</td>
-                            <td>${row.Rate}</td>
-                            <td>${row.PredictedRate !== null ? row.PredictedRate.toFixed(4) : 'N/A'}</td>
-                            <td>${row.PredictionDate || '—'}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                });
-        }
-
-        function loadChartData() {
-            fetch('/api/history/chart')
-                .then(res => res.json())
-                .then(data => {
-                    allData = data;
-                    const select = document.getElementById("currencySelect");
-                    select.innerHTML = Object.keys(data).map(k => `<option value="${k}">${k}</option>`).join("");
-                    updateChart();
-                });
-        }
-
-        function updateChart() {
-            const currency = document.getElementById("currencySelect").value;
-            const data = allData[currency] || [];
-
-            const labels = data.map(item => item.date);
-            const rates = data.map(item => item.rate);
-
-            const ctx = document.getElementById("rateChart").getContext("2d");
-
-            if (chartInstance) chartInstance.destroy();
-
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${currency} 汇率`,
-                        data: rates,
-                        borderWidth: 2,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                        fill: true,
-                        tension: 0.2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        zoom: {
-                            zoom: {
-                                wheel: { enabled: true },
-                                pinch: { enabled: true },
-                                mode: 'x',
-                            },
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            title: { display: true, text: '日期' }
-                        },
-                        y: {
-                            title: { display: true, text: '汇率' }
-                        }
-                    }
-                }
+      function loadLatestRates() {
+        fetch("/api/latest")
+          .then((res) => res.json())
+          .then((data) => {
+            const tbody = document.querySelector("#rateTable tbody");
+            tbody.innerHTML = "";
+            data.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+              <td>${row.Date}</td>
+              <td>${row.Currency}</td>
+              <td>${row.Rate}</td>
+              <td>${
+                row.PredictedRate !== null
+                  ? row.PredictedRate.toFixed(4)
+                  : "N/A"
+              }</td>
+              <td>${row.PredictionDate || "—"}</td>
+            `;
+              tbody.appendChild(tr);
             });
+          });
+      }
+
+      function loadChartData() {
+        fetch("/api/history/chart")
+          .then((res) => res.json())
+          .then((data) => {
+            allData = data;
+            const select = document.getElementById("currencySelect");
+            select.innerHTML = Object.keys(data)
+              .map((k) => `<option value="${k}">${k}</option>`)
+              .join("");
+            updateChart();
+          });
+      }
+
+      function updateChart() {
+        const currency = document.getElementById("currencySelect").value;
+        const data = allData[currency] || [];
+
+        const DAY_WINDOW = 2; // 👈 只改这个值
+
+        const now = new Date();
+        const windowStart = new Date(
+          now.getTime() - DAY_WINDOW * 24 * 60 * 60 * 1000
+        );
+        const filtered = data.filter(
+          (d) => new Date(d.datetime) >= windowStart
+        );
+
+        const historyOnly = filtered.filter((d) => d.rate !== null);
+        const predictionOnly = filtered.filter(
+          (d) => d.rate === null && d.predicted !== null
+        );
+
+        const combined = [...historyOnly, ...predictionOnly];
+
+        const labels = combined.map((d) => d.datetime);
+        const historyRates = combined.map((d) =>
+          d.rate !== null ? d.rate : null
+        );
+        const predictionRates = combined.map((d) =>
+          d.rate === null && d.predicted !== null ? d.predicted : null
+        );
+
+        const lastHistIndex = historyRates
+          .map((v, i) => (v !== null ? i : -1))
+          .filter((i) => i !== -1)
+          .pop();
+        const firstPredIndex = predictionRates.findIndex((v) => v !== null);
+
+        let connectorData = new Array(combined.length).fill(null);
+        if (lastHistIndex !== undefined && firstPredIndex !== -1) {
+          connectorData[lastHistIndex] = historyRates[lastHistIndex];
+          connectorData[firstPredIndex] = predictionRates[firstPredIndex];
         }
 
-        window.onload = function () {
-            fetch('/api/switch/status')
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById("status").textContent = data.status;
-                });
+        const ctx = document.getElementById("rateChart").getContext("2d");
+        if (chartInstance) chartInstance.destroy();
 
-            loadLatestRates();
-            loadChartData();
-        }
+        const visibleStart = labels.length > 10 ? labels.length - 10 : 0;
+        const visibleEnd = labels.length - 1;
+
+        chartInstance = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: `${currency} 历史汇率`,
+                data: historyRates,
+                borderColor: "rgba(75, 192, 192, 1)",
+                backgroundColor: "rgba(75, 192, 192, 0.1)",
+                fill: true,
+                tension: 0.2,
+                spanGaps: false,
+              },
+              {
+                label: `${currency} 预测汇率`,
+                data: predictionRates,
+                borderColor: "rgba(255, 99, 132, 1)",
+                borderDash: [6, 6],
+                pointBackgroundColor: "rgba(255, 99, 132, 1)",
+                pointStyle: "circle",
+                pointRadius: 4,
+                fill: false,
+                tension: 0,
+                spanGaps: false,
+              },
+              {
+                label: "连接线",
+                data: connectorData,
+                borderColor: "rgba(128, 128, 128, 0.5)",
+                borderDash: [3, 3],
+                pointRadius: 0,
+                fill: false,
+                tension: 0,
+                spanGaps: true,
+                showLine: true,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  title: function (context) {
+                    return `时间：${context[0].label}`;
+                  },
+                  label: function (context) {
+                    return `${context.dataset.label}：${context.formattedValue}`;
+                  },
+                },
+              },
+              legend: {
+                labels: {
+                  usePointStyle: true,
+                  filter: function (legendItem) {
+                    return legendItem.text !== "连接线";
+                  },
+                },
+              },
+              zoom: {
+                limits: {
+                  x: {
+                    min: 0,
+                    max: labels.length - 1,
+                    minRange: 5, // ✅ 控制滚轮缩放最小宽度
+                  },
+                },
+                zoom: {
+                  wheel: { enabled: true },
+                  pinch: { enabled: true },
+                  mode: "x",
+                },
+                pan: {
+                  enabled: true,
+                  mode: "x",
+                },
+              },
+            },
+            scales: {
+              x: {
+                min: visibleStart,
+                max: visibleEnd,
+                title: { display: true, text: "时间" },
+                ticks: { display: false },
+              },
+              y: {
+                title: { display: true, text: "汇率" },
+                grace: "5%",
+              },
+            },
+          },
+        });
+      }
+
+      window.onload = function () {
+        loadLatestRates();
+        loadChartData();
+      };
     </script>
-</body>
+  </body>
 </html>

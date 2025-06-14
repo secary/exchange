@@ -1,30 +1,26 @@
-import logging.config
+from loguru import logger
 import uuid
-from config.logger_config import LOGGING_CONFIG, trace_ids
 import os
+from config.logger_config import trace_ids
+
+
+# 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
+trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
+trace_ids["jervis"].set(trace_id)
+
+# ✅ 绑定 loguru 的 name 字段，用于日志分类输出
+logger = logger.bind(name="jervis")
 
 # 获取项目根目录（Jervis.py 所在目录的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
 
-# 日志配置
-logging.config.dictConfig(LOGGING_CONFIG)
-logger = logging.getLogger("jervis")
-
-# 设置 trace_id（和 Flask 请求无关时也初始化一个）
-trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
-trace_ids["jervis"].set(trace_id)
-logger.info(f"🔁 启动预测任务，TRACE_ID={trace_id}")
-
 import pandas as pd
 import numpy as np
 import torch
 import time
-import io
-import base64
-import matplotlib.pyplot as plt
 
-from app.prediction.methods import fetch_history, build_sequences, split, load_latest_model, evaluate_metrics, scale, preprocess
+from app.prediction.methods import fetch_history, load_latest_model, scale, preprocess
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, get_currency_code, CURRENCIES # 你已有这个
 from app.models import Prediction # 你的 Prediction ORM
@@ -109,6 +105,7 @@ def main(currency: str, days: int=7):
 
 
 if __name__ == "__main__":
+    logger.info("Nice to meet you. Lucky Jervis、来たわ!")
     try:
         for currency in CURRENCIES:
             currency_en = get_currency_code(currency)
