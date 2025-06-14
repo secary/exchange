@@ -1,15 +1,18 @@
 import sys
 import os
+
+# 自动加入项目根目录到 sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 from loguru import logger
 import uuid
 from config.logger_config import trace_ids
 
+# ✅ 绑定 loguru 的 name 字段，用于日志分类输出
+logger = logger.bind(name="jervis")
 # 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
 trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
 trace_ids["jervis"].set(trace_id)
-
-# 自动加入项目根目录到 sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import pandas as pd
 import numpy as np
@@ -21,7 +24,6 @@ from app.models import History
 from sklearn.preprocessing import MinMaxScaler
 import torch
 from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
-
 
 scaler = MinMaxScaler()
 

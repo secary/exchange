@@ -35,7 +35,7 @@ def file_sink_factory(module_prefix):
         trace_id = trace_ids.get(module_prefix, contextvars.ContextVar("unknown", default="-")).get()
         log_line = (
             f"{record['time'].strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]} "
-            f"[{record['level'].name}] {record['name']} [trace_id={trace_id}]: {record['message']}\n"
+            f"[{record['level'].name}] {record['extra'].get('display', record['name'])} [trace_id={trace_id}]: {record['message']}\n"
         )
         log_file = os.path.join(LOG_DIR, f"{module_prefix.capitalize()}.log")
         with open(log_file, "a", encoding="utf-8") as f:

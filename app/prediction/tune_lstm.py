@@ -1,13 +1,18 @@
 import os
 import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
 from loguru import logger
 import uuid
 from config.logger_config import trace_ids
 
+# ✅ 绑定 loguru 的 name 字段，用于日志分类输出
+script_name = os.path.splitext(os.path.basename(__file__))[0]
+logger = logger.bind(name="jervis", display=script_name)
 # 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
 trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
 trace_ids["jervis"].set(trace_id)
-
 
 import torch
 from sklearn.metrics import mean_squared_error
@@ -18,12 +23,8 @@ from app.prediction.methods import preprocess, fetch_history, build_sequences, s
 from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
 from config.settings import get_currency_code, CURRENCIES
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-# 获取项目根目录（从 tune_lstm.py 向上三级）
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-# 构造模型保存路径
 MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
-
 
 
 def grid_search_lstm(
