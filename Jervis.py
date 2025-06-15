@@ -3,7 +3,6 @@ import uuid
 import os
 from config.logger_config import trace_ids
 
-
 # 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
 trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
 trace_ids["jervis"].set(trace_id)
@@ -24,6 +23,7 @@ from app.prediction.methods import fetch_history, load_latest_model, scale, prep
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, get_currency_code, CURRENCIES # 你已有这个
 from app.models import Prediction # 你的 Prediction ORM
+
 
 def insert_predictions(df: pd.DataFrame):
     engine = get_engine()

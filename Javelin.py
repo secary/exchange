@@ -1,4 +1,3 @@
-import os
 import uuid
 from loguru import logger
 from config.logger_config import trace_ids
@@ -11,9 +10,11 @@ logger = logger.bind(name="javelin")
 logger.info("HMS Javelin、抜錨します.")
 
 from app import create_app
+
+
 # 创建 Flask 应用
 app = create_app()
 
 # ✅ 启动 Flask
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000)
