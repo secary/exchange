@@ -17,7 +17,7 @@ log() {
   local level="$1"
   local message="$2"
   local timestamp="$(date '+%Y-%m-%d %H:%M:%S,%3N')"
-  echo "$timestamp [$level] $SCRIPT_NAME [trace_id=${TRACE_ID_JANUS}]: $message" >> "$LOG_FILE"
+  echo "$timestamp [$level] $SCRIPT_NAME [${TRACE_ID_JANUS}]: $message" >> "$LOG_FILE"
 }
 
 log INFO "🔁 启动自动化任务"

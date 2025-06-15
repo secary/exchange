@@ -16,7 +16,7 @@ log() {
   local level="$1"
   local msg="$2"
   local timestamp="$(date '+%Y-%m-%d %H:%M:%S,%3N')"
-  local line="$timestamp [$level] $SCRIPT_NAME [trace_id=$TRACE_ID_JERVIS]: $msg"
+  local line="$timestamp [$level] $SCRIPT_NAME [$TRACE_ID_JERVIS]: $msg"
 
   echo "$line" >> "$LOG_FILE"
   [[ "$level" == "WARNING" || "$level" == "ERROR" ]] && echo "$line"
