@@ -27,8 +27,7 @@ log INFO "🔁 启动自动化任务"
 
 PYTHON_BIN=$(command -v python3 || echo "/usr/local/bin/python")
 
-PYTHONUNBUFFERED=1 "$PYTHON_BIN" "$BASE_DIR/main/Janus.py" 2> >(grep -vE '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} \[ERROR\]' >&2)
-
+PYTHONUNBUFFERED=1 "$PYTHON_BIN" "$BASE_DIR/main/Janus.py"
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
