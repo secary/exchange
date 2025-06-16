@@ -118,7 +118,7 @@ def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> Rat
     if not latest_file:
         logger.error(f"⚠️ 未找到 {currency} 模型，尝试自动训练...")
         import tune_lstm
-        tune_lstm.main(currency)  # 自动训练
+        tune_lstm.tune(currency)  # 自动训练
         latest_file = find_latest_file()
 
         if not latest_file:

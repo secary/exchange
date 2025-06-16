@@ -23,7 +23,7 @@ from models.lstm import RateLSTM  # ✅ 保持绝对路径
 from config.settings import get_currency_code, CURRENCIES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "predictor", "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
 
 
 def grid_search_lstm(
@@ -81,7 +81,7 @@ def grid_search_lstm(
     return best_cfg
 
 
-def main(currency: str, model_dir=MODEL_DIR):
+def tune(currency: str, model_dir=MODEL_DIR):
     data = fetch_history(currency, days=30)
     data = preprocess(data)
     data_scaled = scale(data[['Rate']])
@@ -103,8 +103,8 @@ def main(currency: str, model_dir=MODEL_DIR):
     )
 
     logger.info(f"✅ Done. Best model saved to: {best_config['model_path']}")
-
-if __name__ == "__main__":
+    
+def main():
     try:
         for currency in CURRENCIES:
             currency_en = get_currency_code(currency)
@@ -115,8 +115,11 @@ if __name__ == "__main__":
                 logger.warning(f"⚠️ 当前{currency}数据不足，暂不训练")
             else:
                 logger.info(f"🔁 启动{currency_en}汇率LSTM调优，TRACE_ID={trace_id}")
-                main(currency_en)
+                tune(currency_en)
                 logger.info(f"🔮 {currency}LSTM预测调优完成")
     except Exception as e:
         logger.exception(f"❌ 出现错误：{e}")  # 包含堆栈 trace_id
-   
+
+if __name__ == "__main__":
+    logger.info(" Lucky Jervis. 今日もゼッタイよ！")
+    main()

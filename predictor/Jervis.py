@@ -14,7 +14,7 @@ logger = logger.bind(name="jervis")
 
 # 获取项目根目录（Jervis.py 所在目录的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "predictor", "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
 
 import pandas as pd
 import numpy as np
@@ -33,24 +33,31 @@ def insert_predictions(df: pd.DataFrame):
     session = Session()
 
     try:
-        for _, row in df.iterrows():
-            entry = Prediction(
+        # # 1️⃣ 清空 prediction 表
+        session.query(Prediction).delete()
+
+        # 2️⃣ 批量插入新数据
+        records = [
+            Prediction(
                 Date=row["Date"],
                 Currency=row["Currency"],
                 Predicted_rate=row["Predicted_Rates"],
                 Locals=row["Locals"]
-            )
-            session.merge(entry)  # merge避免主键重复插入报错
+            ) for _, row in df.iterrows()
+        ]
+        session.bulk_save_objects(records)
         session.commit()
-        logger.info("✅ 数据成功导入 prediction 表")
+        logger.info(f"✅ 成功写入 {len(records)} 条预测数据")
+
     except Exception as e:
         session.rollback()
-        logger.error("❌ 导入失败:", e)
+        logger.error(f"❌ 导入 prediction 表失败: {e}")
+
     finally:
         session.close()
 
 
-def main(currency: str, days: int=7):
+def lstm_predict(currency: str, days: int=7):
     
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model = load_latest_model(MODEL_DIR, currency, device)
@@ -101,24 +108,46 @@ def main(currency: str, days: int=7):
         "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
     })
     
-    
     logger.info(f"🔮 未来{days}内{currency}预测完成，共 {len(df_forecast)} 条")
+    
     return df_forecast
 
-
-if __name__ == "__main__":
-    logger.info("Nice to meet you. Lucky Jervis、来たわ!")
+def main():
     try:
+        all_results = []  # ⬅️ 存储所有币种的预测结果
+
         for currency in CURRENCIES:
             currency_en = get_currency_code(currency)
             if not currency_en:
                 logger.warning(f"⚠️ {currency}未存在于数据库内")
+                continue
+
             if len(fetch_history(currency_en, 30)) < 500:
-                pass
                 logger.warning(f"⚠️ 当前{currency}数据不足，暂不预测")
+                continue
+
+            result = lstm_predict(currency_en)
+            if result is not None and not result.empty:
+                all_results.append(result)
+                logger.info(f"🔮 {currency}预测完成，共 {len(result)} 条")
             else:
-                main(currency_en)
-                logger.info(f"🔮 {currency}预测完成")
+                logger.warning(f"⚠️ {currency}预测结果为空")
+
+        # 🔗 合并所有币种的预测结果为一个 DataFrame
+        if all_results:
+            merged_df = pd.concat(all_results, ignore_index=True)
+            logger.info(f"✅ 所有币种预测合并完成，共 {len(merged_df)} 条")
+
+            # ✍️ 写入数据库
+            insert_predictions(merged_df)
+        else:
+                logger.warning("⚠️ 没有任何币种的预测结果被生成")
+
     except Exception as e:
-        logger.exception(f"❌ 出现错误：{e}")  # 包含堆栈 trace_id
+        logger.exception(f"❌ 出现错误：{e}")
+
+
+if __name__ == "__main__":
+    logger.info("Nice to meet you. Lucky Jervis、来たわ!")
+    main()
    
