@@ -1,4 +1,8 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+import os
 import uuid
 from loguru import logger
 from config.logger_config import trace_ids
@@ -12,16 +16,12 @@ logger = logger.bind(name="javelin")
 
 
 from flask import Blueprint, jsonify, request, render_template
-from app.services.fetcher import get_exchange_rate
-from app.services.storage import store_data
+from crawler.fetcher import get_exchange_rate
+from crawler.storage import store_data
 from config.settings import WEBSITE, CURRENCIES, get_engine
-from app.models import History, Threshold, Prediction
+from utils.models import History, Threshold, Prediction, AutomationSwitch
 from sqlalchemy.orm import sessionmaker
-from app.models import AutomationSwitch
 from sqlalchemy import func, and_
-from sqlalchemy.orm import aliased
-from sqlalchemy.sql import over
-from sqlalchemy import Integer
 from datetime import datetime, timedelta
 
 main = Blueprint("main", __name__)

@@ -14,7 +14,7 @@ logger = logger.bind(name="janus")
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
-from app.models import History
+from utils.models import History
 import time
 
 def store_data(data_dict):

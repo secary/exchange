@@ -1,4 +1,7 @@
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import uuid
 import pandas as pd
 from loguru import logger
@@ -12,8 +15,8 @@ trace_ids["janus"].set(trace_id)
 logger = logger.bind(name="janus")
 
 # 模块功能导入
-from app.services.fetcher import get_exchange_rate
-from app.services.storage import store_data
+from crawler.fetcher import get_exchange_rate
+from crawler.storage import store_data
 from config.settings import WEBSITE, CURRENCIES
 
 

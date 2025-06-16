@@ -24,7 +24,8 @@ log INFO "🔁 启动自动化任务"
 log INFO "🚀 执行 Janus.py"
 
 # ✅ 执行 Python，但不写 stdout/stderr，只写 loguru
-PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/Janus.py" >/dev/null 2>&1
+# PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/crawler/Janus.py" >/dev/null 2>&1
+PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/crawler/Janus.py"
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then

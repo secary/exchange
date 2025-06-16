@@ -1,6 +1,0 @@
-flask
-sqlalchemy
-pymysql
-python-dotenv
-loguru
-beautifulsoup4

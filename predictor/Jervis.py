@@ -1,8 +1,10 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from loguru import logger
 import uuid
-import os
 from config.logger_config import trace_ids
-
 # 设置 trace_id（独立运行时使用 uuid；也支持从环境变量传入）
 trace_id = os.getenv("TRACE_ID_JERVIS") or f"JERVIS-{uuid.uuid4()}"
 trace_ids["jervis"].set(trace_id)
@@ -12,17 +14,17 @@ logger = logger.bind(name="jervis")
 
 # 获取项目根目录（Jervis.py 所在目录的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
 
 import pandas as pd
 import numpy as np
 import torch
 import time
 
-from app.prediction.methods import fetch_history, load_latest_model, scale, preprocess
+from methods import fetch_history, load_latest_model, scale, preprocess
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, get_currency_code, CURRENCIES # 你已有这个
-from app.models import Prediction # 你的 Prediction ORM
+from utils.models import Prediction # 你的 Prediction ORM
 
 
 def insert_predictions(df: pd.DataFrame):

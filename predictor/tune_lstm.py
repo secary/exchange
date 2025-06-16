@@ -1,7 +1,6 @@
 import os
 import sys
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loguru import logger
 import uuid
@@ -19,12 +18,12 @@ from sklearn.metrics import mean_squared_error
 from typing import List, Dict, Any
 from datetime import datetime
 
-from app.prediction.methods import preprocess, fetch_history, build_sequences, scale, split
-from app.prediction.models.lstm import RateLSTM  # ✅ 保持绝对路径
+from methods import preprocess, fetch_history, build_sequences, scale, split
+from models.lstm import RateLSTM  # ✅ 保持绝对路径
 from config.settings import get_currency_code, CURRENCIES
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
-MODEL_DIR = os.path.join(BASE_DIR, "app", "prediction", "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
 
 
 def grid_search_lstm(

@@ -11,7 +11,7 @@ from config.logger_config import LOGGING_CONFIG
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
 
-from app.models import Base, Threshold, AutomationSwitch
+from utils.models import Base, Threshold, AutomationSwitch
 from config.settings import get_engine
 from sqlalchemy.orm import sessionmaker
 

@@ -17,7 +17,7 @@ import time
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine, CSV_FILE
-from app.models import History, Base
+from utils.models import History, Base
 
 
 

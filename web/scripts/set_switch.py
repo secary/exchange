@@ -14,7 +14,7 @@ logger = logging.getLogger("auto")
 
 from sqlalchemy.orm import sessionmaker
 from config.settings import get_engine
-from app.models import AutomationSwitch
+from utils.models import AutomationSwitch
 
 def set_switch(status: bool):
     Session = sessionmaker(bind=get_engine())
