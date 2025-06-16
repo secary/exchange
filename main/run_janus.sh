@@ -25,11 +25,15 @@ log() {
 
 log INFO "🔁 启动自动化任务"
 
-# ✅ 自动查找 Python 解释器（兼容本地和容器）
 PYTHON_BIN=$(command -v python3 || echo "/usr/local/bin/python")
 
-# ✅ 执行主脚本，日志由 loguru 控制写入 logs/
-PYTHONUNBUFFERED=1 "$PYTHON_BIN" "$BASE_DIR/main/Janus.py"
+run_python() {
+  {
+    PYTHONUNBUFFERED=1 "$PYTHON_BIN" "$BASE_DIR/main/Janus.py"
+  } 2> >(while IFS= read -r line; do log ERROR "stderr: $line"; done)
+}
+
+run_python
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
