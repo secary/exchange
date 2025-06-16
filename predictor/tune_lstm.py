@@ -23,7 +23,7 @@ from models.lstm import RateLSTM  # ✅ 保持绝对路径
 from config.settings import get_currency_code, CURRENCIES
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "predictor", "models", "RateLSTM")
 
 
 def grid_search_lstm(

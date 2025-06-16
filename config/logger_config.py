@@ -45,7 +45,7 @@ def file_sink_factory(module_prefix):
 logger.remove()
 
 # ✅ 控制台仅 WARNING 以上，带 trace_id
-logger.add(safe_sink, level="WARNING")
+logger.add(safe_sink, level="INFO")
 
 # ✅ 各模块写入文件（不带 trace_id）
 logger.add(file_sink_factory("janus"), level="DEBUG")

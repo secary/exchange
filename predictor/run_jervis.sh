@@ -9,19 +9,19 @@ mkdir -p "$LOG_DIR"
 SCRIPT_NAME="$(basename "$0")"
 export TRACE_ID_JERVIS="JERVIS-$(uuidgen)"
 
-# ✅ 所有日志仅写入 Jervis.log，不输出终端
 log() {
   local level="$1"
-  local message="$2"
+  local msg="$2"
   local timestamp="$(date '+%Y-%m-%d %H:%M:%S,%3N')"
-  echo "$timestamp [$level] $SCRIPT_NAME [${TRACE_ID_JERVIS}]: $message" >> "$LOG_FILE"
+  local line="$timestamp [$level] $SCRIPT_NAME [$TRACE_ID_JERVIS]: $msg"
+  echo "$line" | tee -a "$LOG_FILE"
 }
 
-log INFO "⏰ 启动每日预测任务"
+log INFO "⏰ 启动预测任务"
 log INFO "🚀 执行 Jervis.py"
 
 # ✅ 静默运行 Python，只由 loguru 写入 Jervis.log
-PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/predictor/Jervis.py" >/dev/null 2>&1
+PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/predictor/Jervis.py" 
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
