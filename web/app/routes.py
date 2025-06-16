@@ -16,8 +16,8 @@ logger = logger.bind(name="javelin")
 
 
 from flask import Blueprint, jsonify, request, render_template
-from crawler.fetcher import get_exchange_rate
-from crawler.storage import store_data
+# from main.fetcher import get_exchange_rate
+# from main.storage import store_data
 from config.settings import WEBSITE, CURRENCIES, get_engine
 from utils.models import History, Threshold, Prediction, AutomationSwitch
 from sqlalchemy.orm import sessionmaker
@@ -31,15 +31,15 @@ Session = sessionmaker(bind=get_engine())
 def index():
     return render_template("index.html")
 
-@main.route("/api/fetch", methods=["POST"])
-def api_fetch():
-    logger.info("触发 /api/fetch 抓取汇率数据")
-    try:
-        data = get_exchange_rate(WEBSITE, CURRENCIES)
-        store_data(data)
-        return jsonify({"message": "抓取并存储成功", "data": data})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# @main.route("/api/fetch", methods=["POST"])
+# def api_fetch():
+#     logger.info("触发 /api/fetch 抓取汇率数据")
+#     try:
+#         data = get_exchange_rate(WEBSITE, CURRENCIES)
+#         store_data(data)
+#         return jsonify({"message": "抓取并存储成功", "data": data})
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
     
 @main.route("/api/history", methods=["GET"])
 def api_history():
