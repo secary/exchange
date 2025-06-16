@@ -41,11 +41,11 @@ def store_data(data_dict):
     else:
         df_updated = df_new
 
-    try:
-        df_updated.to_csv(CSV_FILE, index=False)
-        logger.info(f"✅ 数据成功存储到 {CSV_FILE}")
-    except Exception as e:
-        logger.error(f"❌ csv保存错误: {e}")
+    # try:
+    #     df_updated.to_csv(CSV_FILE, index=False)
+    #     logger.info(f"✅ 数据成功存储到 {CSV_FILE}")
+    # except Exception as e:
+    #     logger.error(f"❌ csv保存错误: {e}")
 
     engine = get_engine()
     Session = sessionmaker(bind=engine)

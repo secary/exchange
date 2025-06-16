@@ -7,7 +7,14 @@ LOG_FILE="$LOG_DIR/Janus.log"
 mkdir -p "$LOG_DIR"
 
 SCRIPT_NAME="$(basename "$0")"
-export TRACE_ID_JANUS="JANUS-$(uuidgen)"
+
+# 生成 Trace ID（兼容无 uuidgen 情况）
+if command -v uuidgen >/dev/null 2>&1; then
+  TRACE_ID_JANUS="JANUS-$(uuidgen)"
+else
+  TRACE_ID_JANUS="JANUS-$(date +%s%N)"
+fi
+export TRACE_ID_JANUS
 
 log() {
   local level="$1"
@@ -18,9 +25,11 @@ log() {
 
 log INFO "🔁 启动自动化任务"
 
-# ✅ 执行 Python，但不写 stdout/stderr，只写 loguru
-PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/main/Janus.py" 
+# ✅ 自动查找 Python 解释器（兼容本地和容器）
+PYTHON_BIN=$(command -v python3 || echo "/usr/local/bin/python")
 
+# ✅ 执行主脚本，日志由 loguru 控制写入 logs/
+PYTHONUNBUFFERED=1 "$PYTHON_BIN" "$BASE_DIR/main/Janus.py"
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
