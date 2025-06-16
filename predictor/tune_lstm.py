@@ -22,7 +22,7 @@ from methods import preprocess, fetch_history, build_sequences, scale, split
 from models.lstm import RateLSTM  # ✅ 保持绝对路径
 from config.settings import get_currency_code, CURRENCIES
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
 
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env zsh
-
 cd /home/mt/root/Janus || exit 1
 
 LOG_DIR="./logs"
@@ -23,7 +22,7 @@ log() {
 }
 
 log INFO "🧪 开始调参任务"
-PYTHONUNBUFFERED=1 /usr/bin/python3 ./app/prediction/tune_lstm.py
+PYTHONUNBUFFERED=1 /usr/bin/python3 ./predictor/tune_lstm.py
 STATUS=$?
 
 if [ $STATUS -eq 0 ]; then
