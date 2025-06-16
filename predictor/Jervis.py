@@ -14,7 +14,7 @@ logger = logger.bind(name="jervis")
 
 # 获取项目根目录（Jervis.py 所在目录的上一级）
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(BASE_DIR, "models", "RateLSTM")
+MODEL_DIR = os.path.join(BASE_DIR, "predictor", "models", "RateLSTM")
 
 import pandas as pd
 import numpy as np

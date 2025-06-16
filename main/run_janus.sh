@@ -17,7 +17,6 @@ log() {
 }
 
 log INFO "🔁 启动自动化任务"
-log INFO "🚀 执行 Janus.py"
 
 # ✅ 执行 Python，但不写 stdout/stderr，只写 loguru
 PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/main/Janus.py" 

@@ -18,7 +18,6 @@ log() {
 }
 
 log INFO "⏰ 启动预测任务"
-log INFO "🚀 执行 Jervis.py"
 
 # ✅ 静默运行 Python，只由 loguru 写入 Jervis.log
 PYTHONUNBUFFERED=1 /usr/bin/python3 "$BASE_DIR/predictor/Jervis.py" 
