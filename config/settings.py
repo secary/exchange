@@ -4,7 +4,8 @@ from sqlalchemy import create_engine
 from utils.models import CurrencyMap
 from sqlalchemy.orm import sessionmaker
 
-load_dotenv(override=False)
+if not os.getenv("DB_HOST"):
+    load_dotenv(".env.dev")
 
 # 数据库配置
 DB_CONFIG = {
