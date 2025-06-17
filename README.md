@@ -12,46 +12,15 @@
 ├── .env.example            # 环境变量模板
 ├── README.md               # 项目说明文件
 ├── requirements.txt        # Python 依赖包
-│
-├── config/                 # 配置文件
-│   ├── logger_config.py
-│   └── settings.py
-│
-├── Docker/                 # Docker 配置
-│   ├── docker-compose.yaml
-│   ├── Dockerfile.Janus
-│   └── Dockerfile.Javelin
-│
-├── main/                   # 汇率抓取模块
-│   ├── fetcher.py
-│   ├── Janus.py            # 主入口
-│   ├── notifier.py
-│   ├── run_janus.sh
-│   └── storage.py
-│
-├── predictor/              # 预测模型模块
-│   ├── Jervis.py           # 主预测入口
-│   ├── methods.py
-│   ├── run_jervis.sh
-│   ├── run_tune_lstm.sh
-│   ├── tune_lstm.py        # LSTM 调参逻辑
-│   └── models/
-│       ├── base.py
-│       ├── lstm.py
-│       └── __init__.py
-│
-├── utils/                  # 辅助工具
-│   ├── createdb.py         # 初始化数据库
-│   └── models.py           # ORM 模型定义
-│
-└── web/                    # Web 前端接口
-    ├── Javelin.py          # Flask 启动脚本
-    └── app/
-        ├── routes.py
-        ├── __init__.py
-        └── templates/
-            ├── index.html
-            └── history.html
+├─config                    # 配置文件
+├─Docker                    # Docker 配置
+├─main                      # 汇率抓取主程序
+│   └── Janus.py            # 主入口
+├─predictor                 # 预测模块
+│   └── Jervis.py           # 主预测入口
+├─utils                     # 辅助工具
+└─web                       # Web 前端接口
+    └── Javelin.py          # Flask 启动脚本
 ```
 
 ---
@@ -63,7 +32,6 @@
 | `Janus` | 抓取中国银行网页汇率数据并写入数据库与 CSV |
 | `Jervis` | 使用 LSTM 模型预测汇率 |
 | `Javelin` | 提供基于 Flask 的可视化网页与 REST 接口 |
-| `notifier.py` | 可拓展的通知模块（如钉钉、邮件） |
 | `run_*.sh` | 提供 cron 等任务调用支持 |
 | `Docker` | 快速部署，模块化构建 |
 
