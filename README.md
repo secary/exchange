@@ -129,8 +129,8 @@ http://localhost:5000/
 通过 crontab 配置自动抓取/预测：
 
 ```
-0 9 * * * /usr/bin/zsh /path/to/run_janus.sh
-0 10 * * * /usr/bin/zsh /path/to/run_jervis.sh
+0 2 * * * /path/to/run_janus.sh
+0 2 * * * /path/to/run_jervis.sh
 ```
 
 ---
