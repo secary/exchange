@@ -1,0 +1,28 @@
+services:
+  crawler:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.Janus
+    image: janus
+    container_name: crawler
+    volumes:
+      - ../logs:/Janus/logs
+      # - ../data:/Janus/data
+      - ../main/crontab.txt:/Janus/crontab.txt
+    env_file:
+      - ../.env
+    restart: always
+
+  web:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.Javelin
+    image: javelin
+    container_name: web
+    ports:
+      - "5000:5000"
+    volumes:
+      - ../logs:/Javelin/logs
+    env_file:
+      - ../.env
+    restart: always
