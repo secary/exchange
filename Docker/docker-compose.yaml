@@ -8,7 +8,7 @@ services:
     volumes:
       - ../logs:/Janus/logs
       # - ../data:/Janus/data
-      - ../main/crontab.txt:/Janus/crontab.txt
+      - ../main/crontab.txt:/Janus/main/crontab.txt
     env_file:
       - ../.env
     restart: always
@@ -23,6 +23,20 @@ services:
       - "5000:5000"
     volumes:
       - ../logs:/Javelin/logs
+    env_file:
+      - ../.env
+    restart: always
+
+  predictor:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.Jervis
+    image: jervis
+    container_name: predictor
+    volumes:
+      - ../logs:/Janus/logs
+      # - ../data:/Janus/data
+      - ../predictor/crontab.txt:/Janus/predictor/crontab.txt
     env_file:
       - ../.env
     restart: always

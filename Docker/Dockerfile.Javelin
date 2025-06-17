@@ -11,13 +11,11 @@ COPY requirements.txt /Javelin/requirements.txt
 RUN pip install --no-cache-dir -r /Javelin/requirements.txt
 
 # 拷贝网站代码和模板
-COPY web/*.py /Javelin/web/
-COPY web/app/ /Javelin/web/app/
-COPY web/scripts/*.py /Javelin/web/scripts/
+COPY web/ /Javelin/web/
 
 # 拷贝共享配置与模块
-COPY config/*.py /Javelin/config/
-COPY utils/*.py /Javelin/utils/
+COPY config/ /Javelin/config/
+COPY utils/ /Javelin/utils/
 
 # 设置环境变量
 ENV PYTHONDONTWRITEBYTECODE=1

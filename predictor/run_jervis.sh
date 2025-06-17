@@ -7,7 +7,15 @@ LOG_FILE="$LOG_DIR/Jervis.log"
 mkdir -p "$LOG_DIR"
 
 SCRIPT_NAME="$(basename "$0")"
-export TRACE_ID_JERVIS="JERVIS-$(uuidgen)"
+
+# 生成 Trace ID（兼容无 uuidgen 情况）
+if command -v uuidgen >/dev/null 2>&1; then
+  TRACE_ID_JERVIS="JERVIS-$(uuidgen)"
+else
+  TRACE_ID_JERVIS="JERVIS-$(date +%s%N)"
+fi
+export TRACE_ID_JERVIS
+
 
 log() {
   local level="$1"

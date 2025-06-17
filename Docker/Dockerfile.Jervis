@@ -1,7 +1,7 @@
 # 使用轻量级 Python 镜像
 FROM python:3.10-slim
 
-WORKDIR /Janus
+WORKDIR /Jervis
 
 # 安装运行所需系统依赖
 RUN apt-get update && apt-get install -y \
@@ -17,16 +17,17 @@ RUN apt-get update && apt-get install -y \
 ENV TZ=Australia/Adelaide
 
 # 先复制 requirements.txt（可缓存）
-COPY requirements.txt /Janus/requirements.txt
-RUN pip install --no-cache-dir -r /Janus/requirements.txt
+COPY requirements.txt /Jervis/requirements.txt
+RUN pip install --no-cache-dir -r /Jervis/requirements.txt
 
 # 再复制其余项目代码
-COPY main/ /Janus/main/
-COPY config/ /Janus/config/
-COPY utils/ /Janus/utils/
+COPY predictor/ /Jervis/predictor/
+COPY config/ /Jervis/config/
+COPY utils/ /Jervis/utils/
+
 
 # 设置脚本可执行权限
-RUN chmod +x /Janus/main/run_janus.sh /Janus/main/docker_entry.sh
+RUN chmod +x /Jervis/predictor/run_jervis.sh /Jervis/predictor/run_tune_lstm.sh /Jervis/predictor/docker_entry.sh
 
 #设置入口脚本
-CMD ["/Janus/main/docker_entry.sh"]
+CMD ["/Jervis/predictor/docker_entry.sh"]
