@@ -96,7 +96,7 @@ def split(X, y, train_ratio: float, verbose: bool = False) -> tuple:
         print(f"Train size: {X_train.shape[0]}\nTest size: {X_test.shape[0]}")
     return X_train, y_train, X_test, y_test
     
-def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> RateLSTM:
+def load_latest_model(model_dir: str, currency: str, device: str, verbose: bool=False) -> RateLSTM:
     """
     从指定目录中加载最新的 RateLSTM 模型（.pth 文件）。
     如果找不到模型，将自动调用训练函数。
@@ -125,7 +125,8 @@ def load_latest_model(model_dir: str, currency: str, device: str = "cpu") -> Rat
             logger.error(f"❌ 自动训练后仍未找到模型: {currency}")
 
     latest_path = os.path.join(model_dir, latest_file)
-    logger.info(f"🔍 Loading latest {currency} model: {latest_path}")
+    if verbose:
+        print(f"🔍 Loading latest {currency} model: {latest_path}")
 
     model = RateLSTM().to(device)
     model.load_state_dict(torch.load(latest_path, map_location=device))

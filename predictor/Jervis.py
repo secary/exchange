@@ -108,7 +108,7 @@ def lstm_predict(currency: str, days: int=7):
         "Locals": time.strftime("%Y-%m-%d %H:%M:%S %Z", time.localtime())
     })
     
-    logger.info(f"🔮 未来{days}内{currency}预测完成，共 {len(df_forecast)} 条")
+    logger.info(f"🔮 未来{days}日内{currency}汇率预测完成，共 {len(df_forecast)} 条")
     
     return df_forecast
 
@@ -129,15 +129,12 @@ def main():
             result = lstm_predict(currency_en)
             if result is not None and not result.empty:
                 all_results.append(result)
-                logger.info(f"🔮 {currency}预测完成，共 {len(result)} 条")
             else:
                 logger.warning(f"⚠️ {currency}预测结果为空")
 
         # 🔗 合并所有币种的预测结果为一个 DataFrame
         if all_results:
             merged_df = pd.concat(all_results, ignore_index=True)
-            logger.info(f"✅ 所有币种预测合并完成，共 {len(merged_df)} 条")
-
             # ✍️ 写入数据库
             insert_predictions(merged_df)
         else:

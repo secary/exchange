@@ -65,7 +65,7 @@ def grid_search_lstm(
 
                 if mse < best_mse:
                     best_mse = mse
-                    timestamp = datetime.now().strftime("%Y%m%d")
+                    timestamp = datetime.now().strftime("%Y%m")
                     model_path = os.path.join(save_dir, f"{model.__class__.__name__}_{currency}_{timestamp}.pth")
                     model.save(model_path)
 
@@ -82,7 +82,7 @@ def grid_search_lstm(
 
 
 def tune(currency: str, model_dir=MODEL_DIR):
-    data = fetch_history(currency, days=30)
+    data = fetch_history(currency, 30)
     data = preprocess(data)
     data_scaled = scale(data[['Rate']])
 
