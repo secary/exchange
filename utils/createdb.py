@@ -23,4 +23,4 @@ def main():
     
 if __name__ == "__main__":
     main()
-    print("✅ 数据库表已刷新")
+    print("✅ 数据库表已全部建立")
