@@ -3,7 +3,6 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import uuid
-import pandas as pd
 from loguru import logger
 from config.logger_config import trace_ids  # ✅ 引入 trace_ids，上下文追踪
 
@@ -16,6 +15,7 @@ logger = logger.bind(name="janus")
 
 import urllib.request
 import urllib.error
+import traceback
 from bs4 import BeautifulSoup
 import time
 import random
@@ -39,35 +39,45 @@ CN2EN = { r.name_cn: r.code_en for r in rows }
 session.close()
 
 def askurl(url, timeout=15, retries=3, delay=10):
+    import socket
+    socket.setdefaulttimeout(timeout)
+
     for attempt in range(1, retries + 1):
         user_agent = random.choice(USER_AGENTS)
         headers = {'User-Agent': user_agent}
         request = urllib.request.Request(url, headers=headers)
 
         try:
+            logger.debug(f" 第 {attempt} 次尝试，URL: {url}, UA: {user_agent}")
             response = urllib.request.urlopen(request, timeout=timeout)
             html = response.read().decode('utf-8')
-            logger.debug(f"✅ 第 {attempt} 次请求成功，User-Agent: {user_agent}")
+            logger.debug(f" ✅ 成功，第 {attempt} 次，请求状态码: {response.getcode()}")
             return html
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError) as e:
-            logger.warning(f"⚠️ 第 {attempt} 次请求失败，原因: {e}")
-        except Exception as e:
-            logger.exception(f"❌ 第 {attempt} 次请求发生意外错误: {e}")
+
+        except urllib.error.HTTPError as e:
+            logger.warning(f" ⚠️ 第 {attempt} 次失败 - HTTPError: {e.code}, {e.reason}")
+            logger.debug(f" 响应头: {e.headers}")
+        except urllib.error.URLError as e:
+            logger.warning(f" ⚠️ 第 {attempt} 次失败 - URLError: {e.reason}")
+        except TimeoutError as e:
+            logger.warning(f" ⚠️ 第 {attempt} 次失败 - TimeoutError: {e}")
+        except Exception:
+            logger.exception(f" ❌ 第 {attempt} 次失败 - 未知异常")
+            logger.debug(traceback.format_exc())
 
         if attempt < retries:
             sleep_time = delay + random.uniform(2, 5)
-            logger.info(f"将在 {sleep_time:.1f} 秒后重试...")
-            time.sleep(sleep_time)
+            logger.info(f" 将在 {sleep_time:.1f} 秒后重试...")
 
-    logger.error(f"❌ 所有 {retries} 次尝试均失败，放弃请求。")
+    logger.error(f" ❌ 所有 {retries} 次尝试均失败，放弃请求。")
     return None
 
-def get_exchange_rate(url, currencies, timeout=15, retries=2, delay=10, save_html=False):
+def get_exchange_rate(url, currencies, save_html=False):
     if not isinstance(currencies, list):
         logger.error("❌ currencies 参数必须是一个列表")
         return {}
 
-    html = askurl(url, timeout=timeout, retries=retries, delay=delay)
+    html = askurl(url)
     if not html:
         logger.error("❌ 未能获取 HTML 内容")
         return {}

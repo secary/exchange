@@ -23,7 +23,6 @@ from config.settings import WEBSITE, CURRENCIES
 def main():
     try:
         logger.info(f"⚓ 开始抓取人民币兑换 {', '.join(CURRENCIES)} 汇率数据")
-        logger.info(f"数据来源：{WEBSITE}")
         
         rates_data = get_exchange_rate(WEBSITE, CURRENCIES)
         if not rates_data:
