@@ -4,16 +4,16 @@ from sqlalchemy import create_engine
 from utils.models import CurrencyMap
 from sqlalchemy.orm import sessionmaker
 
-if not os.getenv("DB_HOST"):
-    load_dotenv(".env.dev")
+load_dotenv(override=False)
 
-# 数据库配置
 DB_CONFIG = {
     'user': os.getenv('DB_USER'),
     'password': os.getenv('DB_PASSWORD'),
     'host': os.getenv('DB_HOST'),
     'database': os.getenv('DB_NAME')
 }
+
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CSV_FILE = os.path.join(BASE_DIR, "data", "ExchangeRates.csv")

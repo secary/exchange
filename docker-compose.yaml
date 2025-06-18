@@ -10,7 +10,7 @@ services:
       # - /data:/Janus/data
       - ./main/crontab.txt:/Janus/main/crontab.txt
     env_file:
-      - .env
+      - .env.prod
     restart: always
 
   web:
@@ -24,7 +24,7 @@ services:
     volumes:
       - ./logs:/Javelin/logs
     env_file:
-      - .env
+      - .env.prod
     restart: always
 
   # predictor:
