@@ -1,0 +1,14 @@
+# Python 缓存
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Jupyter notebook
+**/*.ipynb
+
+# 环境和临时
+.venv/
+venv/
+.env
+.env.*
