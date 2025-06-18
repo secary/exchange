@@ -15,6 +15,7 @@
 ├─config                    # 配置文件
 ├─main                      # 汇率抓取主程序
 │   └── Janus.py            # 主入口
+├─notebook                  # 分析展示
 ├─predictor                 # 预测模块
 │   └── Jervis.py           # 主预测入口
 ├─utils                     # 辅助工具
