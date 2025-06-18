@@ -23,6 +23,7 @@ from utils.models import History, Threshold, Prediction, AutomationSwitch
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import func, and_
 from datetime import datetime, timedelta
+import re
 
 main = Blueprint("main", __name__)
 Session = sessionmaker(bind=get_engine())
@@ -65,13 +66,33 @@ def api_history():
 
 @main.route("/api/logs/latest", methods=["GET"])
 def api_logs_latest():
-    logger.info("访问了 /api/logs/latest 查看最新日志")
-    log_path = os.path.join(os.path.dirname(__file__), "..", "logs", "Janus.log")
+    logger.info("访问了 /api/logs/latest 查看最近一小时日志")
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    LOG_DIR = os.path.join(BASE_DIR, "logs")
+    LOG_FILE = os.path.join(LOG_DIR, "Janus.log")
+
+    time_threshold = datetime.now() - timedelta(hours=1)
+    log_pattern = re.compile(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})")
+
     try:
-        with open(log_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()[-50:]
-        logger.info("读取最新50条日志")
-        return jsonify({"log": "".join(lines)})
+        recent_lines = []
+        with open(LOG_FILE, "r", encoding="utf-8") as f:
+            for line in reversed(f.readlines()):
+                match = log_pattern.match(line)
+                if match:
+                    log_time = datetime.strptime(match.group(1), "%Y-%m-%d %H:%M:%S")
+                    if log_time >= time_threshold:
+                        recent_lines.insert(0, line)
+                    else:
+                        break  # 因为是从后往前读，可以提前结束
+                else:
+                    # 如果没有时间戳，视为日志附属行（追加）
+                    if recent_lines:
+                        recent_lines.insert(0, line)
+
+        logger.info(f"读取过去1小时内的日志，共 {len(recent_lines)} 条")
+        return jsonify({"log": "".join(recent_lines)})
+
     except Exception as e:
         logger.error(f"读取日志文件失败: {e}")
         return jsonify({"error": str(e)}), 500

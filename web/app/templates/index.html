@@ -2,53 +2,113 @@
 <html lang="zh">
   <head>
     <meta charset="UTF-8" />
-    <title>Hi! J級駆逐艦Janusよ.</title>
+    <title>Janus</title>
     <style>
       body {
-        font-family: sans-serif;
-        padding: 2em;
+        font-family: "Segoe UI", sans-serif;
+        padding: 1.2em; /* 原 2em 缩小 */
         max-width: 960px;
         margin: auto;
+        background-color: #f0f2f5;
+        color: #333;
+        line-height: 1.5; /* 原 1.6 更紧凑 */
       }
-      h1 {
+
+      h1,
+      h2 {
         color: #2c3e50;
+        margin-top: 1em; /* 原 1.5em 缩小 */
+        margin-bottom: 0.5em; /* 添加底部间距控制 */
+        font-size: 1.4em; /* 原来较大，略微缩小 */
       }
-      ul {
-        line-height: 1.8em;
-      }
-      code {
-        background: #f4f4f4;
-        padding: 0.2em 0.5em;
-        border-radius: 4px;
-      }
+
       table {
         border-collapse: collapse;
         width: 100%;
-        margin-top: 1em;
+        margin-top: 0.8em; /* 原 1em */
+        background: white;
+        border-radius: 6px; /* 原 8px */
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* 更轻的阴影 */
       }
+
+      th {
+        background-color: #f3f4f6;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
       th,
       td {
-        padding: 8px 12px;
+        padding: 6px 8px; /* 原 8px 12px */
         border: 1px solid #ccc;
         text-align: center;
+        font-size: 13.5px;
       }
+
+      tr:hover {
+        background-color: #f9f9f9;
+      }
+
       select,
-      button {
-        padding: 6px 12px;
-        margin-top: 10px;
+      button,
+      input {
+        padding: 4px 8px; /* 原 6px 12px */
+        margin-top: 6px; /* 原 10px */
+        margin-right: 6px;
+        font-size: 0.95em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      canvas {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #121212;
+          color: #eee;
+        }
+        h1,
+        h2 {
+          color: #cfd8dc;
+        }
+        table,
+        canvas {
+          background: #1e1e1e;
+          color: #ccc;
+        }
+        th {
+          background-color: #2c2c2c;
+        }
+        tr:hover {
+          background-color: #2a2a2a;
+        }
+        input,
+        select {
+          background-color: #2a2a2a;
+          color: #fff;
+          border-color: #444;
+        }
+        input[disabled] {
+          background-color: #1e1e1e;
+          color: #ccc;
+        }
+        #logContainer {
+          background-color: #1e1e1e;
+          color: #ccc;
+          border-color: #444;
+        }
       }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   </head>
   <body>
-    <h1>🌐 Hi！私の名前はJanus!</h1>
-
-    <h2>⚓ 可用接口：</h2>
-    <ul>
-      <li><code>GET /api/history</code> - 查看历史记录</li>
-      <li><code>GET /api/logs/latest</code> - 查看最新日志</li>
-    </ul>
+    <h1>🌐 Hi！私の名前はJanus!そうよ、あのJervisの僚艦の……</h1>
 
     <h2>📊 最新汇率</h2>
     <table id="rateTable">
@@ -64,6 +124,82 @@
       <tbody></tbody>
     </table>
 
+    <h2>💱 汇率换算</h2>
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        gap: 6px; /* 原来较大，调小 */
+        padding: 0.8em; /* 缩小内边距 */
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        max-width: 750px;
+        flex-wrap: wrap;
+      "
+    >
+      <select
+        id="sourceCurrency"
+        style="
+          width: 200px;
+          height: 42px;
+          font-size: 1.05em;
+          padding: 6px 10px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+        "
+      ></select>
+
+      <input
+        type="number"
+        id="sourceAmount"
+        value="1"
+        min="0"
+        step="0.01"
+        style="
+          width: 120px;
+          height: 42px;
+          font-size: 1.05em;
+          padding: 6px 10px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+        "
+      />
+
+      <span style="font-size: 1.4em">⇨</span>
+
+      <span
+        style="
+          min-width: 90px;
+          height: 42px;
+          line-height: 42px;
+          font-size: 1.05em;
+        "
+        >🇨🇳 人民币</span
+      >
+
+      <input
+        type="text"
+        id="convertedCny"
+        disabled
+        style="
+          width: 120px;
+          height: 42px;
+          font-size: 1.1em;
+          padding: 6px 10px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          background-color: #f4f4f4;
+          color: #333;
+        "
+      />
+    </div>
+
+    <p id="exchangeSummary" style="margin: 0.4em 0; font-weight: bold"></p>
+    <p style="font-size: 0.9em; color: gray">
+      更新时间：<span id="updatedTime">-</span>
+    </p>
+
     <h2>📈 汇率走势图</h2>
     <select id="currencySelect" onchange="updateChart()"></select>
     <canvas
@@ -73,35 +209,151 @@
       style="max-width: 100%; margin-top: 1em"
     ></canvas>
 
-    <h2>🔎 查看完整历史数据</h2>
-    <a href="/history" target="_blank"><button>查看历史记录表</button></a>
+    <h2>🔎 查看历史数据</h2>
+    <a href="/history" target="_blank"><button>查看历史记录</button></a>
+
+    <h2>📄 实时日志</h2>
+    <div
+      id="logContainer"
+      style="
+        white-space: pre-wrap;
+        font-family: monospace;
+        background: #f7f7f7;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 1em;
+        max-height: 400px;
+        overflow-y: auto;
+      "
+    ></div>
 
     <script>
-      let chartInstance = null;
-      let allData = {};
+      const flagMap = {
+        AUD: "🇦🇺",
+        USD: "🇺🇸",
+        JPY: "🇯🇵",
+        EUR: "🇪🇺",
+        GBP: "🇬🇧",
+        CNY: "🇨🇳",
+      };
+      const currencyNameMap = {
+        AUD: "澳大利亚元",
+        USD: "美元",
+        JPY: "日元",
+        EUR: "欧元",
+        GBP: "英镑",
+        CNY: "人民币",
+      };
+      let chartInstance = null,
+        allData = {},
+        latestRateMap = {};
+
+      function loadLogs() {
+        fetch("/api/logs/latest")
+          .then((res) => res.json())
+          .then((data) => {
+            const logLines = data.log.split("\n");
+            const container = document.getElementById("logContainer");
+            container.innerHTML = "";
+
+            const importantLevels = ["INFO","WARNING", "ERROR", "CRITICAL"];
+
+            logLines.forEach((line) => {
+              if (
+                importantLevels.some((level) => line.includes(`[${level}]`))
+              ) {
+                const div = document.createElement("div");
+                div.textContent = line;
+
+                // 添加颜色标记（可选）
+                if (line.includes("[ERROR]")) div.style.color = "red";
+                else if (line.includes("[WARNING]")) div.style.color = "orange";
+                else if (line.includes("[CRITICAL]"))
+                  div.style.color = "purple";
+
+                container.appendChild(div);
+              }
+            });
+
+            container.scrollTop = container.scrollHeight;
+          });
+      }
 
       function loadLatestRates() {
         fetch("/api/latest")
           .then((res) => res.json())
           .then((data) => {
             const tbody = document.querySelector("#rateTable tbody");
+            latestRateMap = {};
             tbody.innerHTML = "";
             data.forEach((row) => {
+              latestRateMap[row.Currency] = row.Rate;
               const tr = document.createElement("tr");
               tr.innerHTML = `
               <td>${row.Date}</td>
-              <td>${row.Currency}</td>
+              <td>${flagMap[row.Currency] || ""} ${
+                currencyNameMap[row.Currency] || row.Currency
+              }</td>
               <td>${row.Rate}</td>
               <td>${
                 row.PredictedRate !== null
                   ? row.PredictedRate.toFixed(4)
                   : "N/A"
               }</td>
-              <td>${row.PredictionDate || "—"}</td>
-            `;
+              <td>${row.PredictionDate || "—"}</td>`;
               tbody.appendChild(tr);
             });
+            setupCnyConverter(data);
           });
+      }
+
+      function setupCnyConverter(latestData) {
+        const select = document.getElementById("sourceCurrency");
+        const summary = document.getElementById("exchangeSummary");
+        const updateTime = document.getElementById("updatedTime");
+
+        const rates = {};
+        latestData.forEach((row) => {
+          if (row.Currency !== "CNY") rates[row.Currency] = row.Rate;
+        });
+
+        select.innerHTML = Object.keys(rates)
+          .map(
+            (cur) =>
+              `<option value="${cur}">${flagMap[cur] || ""} ${
+                currencyNameMap[cur] || cur
+              }</option>`
+          )
+          .join("");
+
+        select.value = "AUD";
+
+        function updateDisplay() {
+          const cur = select.value;
+          const rate = rates[cur] / 100;
+          const amount =
+            parseFloat(document.getElementById("sourceAmount").value) || 0;
+          const cnyValue = amount * rate;
+          document.getElementById("convertedCny").value = cnyValue.toFixed(4);
+          summary.innerHTML = `
+          <div>1 ${currencyNameMap[cur] || cur} ≈ ${rate.toFixed(
+            4
+          )} 人民币</div>
+          <div>1 人民币 ≈ ${(1 / rate).toFixed(4)} ${
+            currencyNameMap[cur] || cur
+          }</div>`;
+        }
+
+        document
+          .getElementById("sourceCurrency")
+          .addEventListener("change", updateDisplay);
+        document
+          .getElementById("sourceAmount")
+          .addEventListener("input", updateDisplay);
+
+        const firstDate = latestData.find((d) => d.Date);
+        if (firstDate) updateTime.textContent = firstDate.Date;
+        updateDisplay();
       }
 
       function loadChartData() {
@@ -111,7 +363,10 @@
             allData = data;
             const select = document.getElementById("currencySelect");
             select.innerHTML = Object.keys(data)
-              .map((k) => `<option value="${k}">${k}</option>`)
+              .map(
+                (k) =>
+                  `<option value="${k}">${currencyNameMap[k] || k}</option>`
+              )
               .join("");
             updateChart();
           });
@@ -120,24 +375,16 @@
       function updateChart() {
         const currency = document.getElementById("currencySelect").value;
         const data = allData[currency] || [];
-
-        const DAY_WINDOW = 2; // 👈 只改这个值
-
         const now = new Date();
-        const windowStart = new Date(
-          now.getTime() - DAY_WINDOW * 24 * 60 * 60 * 1000
-        );
+        const windowStart = new Date(now.getTime() - 2 * 86400000);
         const filtered = data.filter(
           (d) => new Date(d.datetime) >= windowStart
         );
-
         const historyOnly = filtered.filter((d) => d.rate !== null);
         const predictionOnly = filtered.filter(
           (d) => d.rate === null && d.predicted !== null
         );
-
         const combined = [...historyOnly, ...predictionOnly];
-
         const labels = combined.map((d) => d.datetime);
         const historyRates = combined.map((d) =>
           d.rate !== null ? d.rate : null
@@ -151,8 +398,7 @@
           .filter((i) => i !== -1)
           .pop();
         const firstPredIndex = predictionRates.findIndex((v) => v !== null);
-
-        let connectorData = new Array(combined.length).fill(null);
+        const connectorData = new Array(combined.length).fill(null);
         if (lastHistIndex !== undefined && firstPredIndex !== -1) {
           connectorData[lastHistIndex] = historyRates[lastHistIndex];
           connectorData[firstPredIndex] = predictionRates[firstPredIndex];
@@ -160,26 +406,21 @@
 
         const ctx = document.getElementById("rateChart").getContext("2d");
         if (chartInstance) chartInstance.destroy();
-
-        const visibleStart = labels.length > 10 ? labels.length - 10 : 0;
-        const visibleEnd = labels.length - 1;
-
         chartInstance = new Chart(ctx, {
           type: "line",
           data: {
             labels: labels,
             datasets: [
               {
-                label: `${currency} 历史汇率`,
+                label: `${currencyNameMap[currency] || currency} 历史汇率`,
                 data: historyRates,
                 borderColor: "rgba(75, 192, 192, 1)",
                 backgroundColor: "rgba(75, 192, 192, 0.1)",
                 fill: true,
                 tension: 0.2,
-                spanGaps: false,
               },
               {
-                label: `${currency} 预测汇率`,
+                label: `${currencyNameMap[currency] || currency} 预测汇率`,
                 data: predictionRates,
                 borderColor: "rgba(255, 99, 132, 1)",
                 borderDash: [6, 6],
@@ -188,7 +429,6 @@
                 pointRadius: 4,
                 fill: false,
                 tension: 0,
-                spanGaps: false,
               },
               {
                 label: "连接线",
@@ -199,58 +439,39 @@
                 fill: false,
                 tension: 0,
                 spanGaps: true,
-                showLine: true,
               },
             ],
           },
           options: {
             responsive: true,
-            interaction: {
-              mode: "index",
-              intersect: false,
-            },
+            interaction: { mode: "index", intersect: false },
             plugins: {
               tooltip: {
                 callbacks: {
-                  title: function (context) {
-                    return `时间：${context[0].label}`;
-                  },
-                  label: function (context) {
-                    return `${context.dataset.label}：${context.formattedValue}`;
-                  },
+                  title: (ctx) => `时间：${ctx[0].label}`,
+                  label: (ctx) => `${ctx.dataset.label}：${ctx.formattedValue}`,
                 },
               },
               legend: {
                 labels: {
                   usePointStyle: true,
-                  filter: function (legendItem) {
-                    return legendItem.text !== "连接线";
-                  },
+                  filter: (item) => item.text !== "连接线",
                 },
               },
               zoom: {
-                limits: {
-                  x: {
-                    min: 0,
-                    max: labels.length - 1,
-                    minRange: 5, // ✅ 控制滚轮缩放最小宽度
-                  },
-                },
+                limits: { x: { minRange: 5 } },
                 zoom: {
                   wheel: { enabled: true },
                   pinch: { enabled: true },
                   mode: "x",
                 },
-                pan: {
-                  enabled: true,
-                  mode: "x",
-                },
+                pan: { enabled: true, mode: "x" },
               },
             },
             scales: {
               x: {
-                min: visibleStart,
-                max: visibleEnd,
+                min: labels.length > 10 ? labels.length - 10 : 0,
+                max: labels.length - 1,
                 title: { display: true, text: "时间" },
                 ticks: { display: false },
               },
@@ -266,6 +487,8 @@
       window.onload = function () {
         loadLatestRates();
         loadChartData();
+        loadLogs(); // 加载日志
+        setInterval(loadLogs, 1000 * 60 * 10); // 每 10 分钟刷新
       };
     </script>
   </body>
