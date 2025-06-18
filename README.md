@@ -13,7 +13,7 @@
 ├── README.md               # 项目说明文件
 ├── requirements.txt        # Python 依赖包
 ├─config                    # 配置文件
-├──docker                   # Docker 部署配置
+├─docker                    # Docker 部署配置
 ├─main                      # 汇率抓取主程序
 │   └── Janus.py            # 主入口
 ├─notebook                  # 分析展示
