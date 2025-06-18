@@ -27,16 +27,16 @@ services:
       - .env.prod
     restart: always
 
-  # predictor:
-  #   build:
-  #     context: ..
-  #     dockerfile: Docker/Dockerfile.Jervis
-  #   image: jervis
-  #   container_name: predictor
-  #   volumes:
-  #     - ../logs:/Janus/logs
-  #     # - ../data:/Janus/data
-  #     - ../predictor/crontab.txt:/Janus/predictor/crontab.txt
-  #   env_file:
-  #     - ../.env
-  #   restart: always
+  predictor:
+    build:
+      context: .
+      dockerfile: Dockerfile.Jervis
+    image: jervis
+    container_name: predictor
+    volumes:
+      - ./logs:/Jervis/logs
+      # - ../data:/Janus/data
+      - ./predictor/crontab.txt:/Jervis/predictor/crontab.txt
+    env_file:
+      - .env.prod
+    restart: always
