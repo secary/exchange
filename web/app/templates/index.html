@@ -247,7 +247,6 @@
       let chartInstance = null,
         allData = {},
         latestRateMap = {};
-
       function loadLogs() {
         fetch("/api/logs/latest")
           .then((res) => res.json())
@@ -256,16 +255,35 @@
             const container = document.getElementById("logContainer");
             container.innerHTML = "";
 
-            const importantLevels = ["INFO","WARNING", "ERROR", "CRITICAL"];
+            const importantLevels = ["INFO", "WARNING", "ERROR", "CRITICAL"];
+            let traceId = null;
 
+            // 找到最新一次抓取任务的 trace_id（含 "开始抓取人民币兑换"）
+            for (let i = logLines.length - 1; i >= 0; i--) {
+              const line = logLines[i];
+              if (line.includes("开始抓取人民币兑换")) {
+                const match = line.match(/\[(JANUS-[^\]]+)\]/);
+                if (match) {
+                  traceId = match[1];
+                  break;
+                }
+              }
+            }
+
+            if (!traceId) {
+              container.textContent = "⚠️ 未找到最近的爬虫任务 trace_id。";
+              return;
+            }
+
+            // 展示该 trace_id 下所有日志（只筛选重要级别）
             logLines.forEach((line) => {
               if (
+                line.includes(`[${traceId}]`) &&
                 importantLevels.some((level) => line.includes(`[${level}]`))
               ) {
                 const div = document.createElement("div");
                 div.textContent = line;
 
-                // 添加颜色标记（可选）
                 if (line.includes("[ERROR]")) div.style.color = "red";
                 else if (line.includes("[WARNING]")) div.style.color = "orange";
                 else if (line.includes("[CRITICAL]"))
